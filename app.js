@@ -71,9 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load saved API Key if available
   if (state.apiKey) {
     elements.inputApiKey.value = state.apiKey;
-    elements.secApiKey.classList.remove('active');
-  } else {
-    elements.secApiKey.classList.add('active');
   }
 
   setupEventListeners();
@@ -200,10 +197,8 @@ async function generateExercises() {
   const promptText = elements.promptInput.value.trim();
 
   // Validations
-  if (!state.apiKey) {
-    elements.secApiKey.classList.add('active');
-    elements.secApiKey.scrollIntoView({ behavior: 'smooth' });
-    showToast('Please enter and save your Gemini API Key first.', 'error');
+  if (!promptText) {
+    showToast('Please enter words or a prompt first.', 'error');
     return;
   }
 
@@ -236,7 +231,15 @@ async function generateExercises() {
     console.error(error);
     elements.previewLoader.style.display = 'none';
     elements.previewEmptyState.style.display = 'flex';
-    showToast(`Error: ${error.message || 'Failed to generate exercises.'}`, 'error');
+    
+    // Check if error is due to missing API Key
+    if (error.message.includes('API Key') || error.message.includes('API key') || error.message.includes('key is not configured')) {
+      elements.secApiKey.classList.add('active');
+      elements.secApiKey.scrollIntoView({ behavior: 'smooth' });
+      showToast('API Key is missing. Please configure it in Settings (key icon).', 'error');
+    } else {
+      showToast(`Error: ${error.message || 'Failed to generate exercises.'}`, 'error');
+    }
   } finally {
     elements.btnGenerate.disabled = false;
   }
@@ -299,30 +302,48 @@ Ensure that all words matching the teacher's list are correctly processed and in
     }
   };
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+  let data;
+  if (state.apiKey) {
+    // Local client-side call
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
-  });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error?.message || response.statusText || 'API request failed';
+      throw new Error(errMsg);
+    }
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = errData.error?.message || response.statusText || 'API request failed';
-    throw new Error(errMsg);
+    const result = await response.json();
+    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) {
+      throw new Error('Empty response from model.');
+    }
+    return JSON.parse(rawText);
+  } else {
+    // Production serverless backend call
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: promptText })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error || errData.message || response.statusText || 'Backend server failed to generate questions.';
+      throw new Error(errMsg);
+    }
+
+    return await response.json();
   }
-
-  const result = await response.json();
-  const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!rawText) {
-    throw new Error('Empty response from model.');
-  }
-
-  return JSON.parse(rawText);
 }
 
 function renderPreviewList(data) {
@@ -619,26 +640,46 @@ Always respond in valid JSON matching the specified schema.`;
       }
     };
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+    if (state.apiKey) {
+      // Local client-side call
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      const result = await response.json();
+      const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error("Empty response from grading model.");
+
+      const gradingResult = JSON.parse(rawText);
+      applyGradingResults(gradingResult.evaluations);
+    } else {
+      // Serverless backend call
+      const response = await fetch('/api/grade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ payload: gradingPayload })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error || errData.message || response.statusText || 'Backend server failed to grade answers.';
+        throw new Error(errMsg);
+      }
+
+      const gradingResult = await response.json();
+      applyGradingResults(gradingResult.evaluations);
     }
-
-    const result = await response.json();
-    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) throw new Error("Empty response from grading model.");
-
-    const gradingResult = JSON.parse(rawText);
-    applyGradingResults(gradingResult.evaluations);
 
   } catch (error) {
     console.error('Error during AI grading:', error);
