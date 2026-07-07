@@ -1,0 +1,11 @@
+{
+  "name": "vocabulary-tutoring-app",
+  "version": "1.0.0",
+  "description": "Vocabulary Learning App for tutoring students",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

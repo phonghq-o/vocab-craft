@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VocabCraft - Interactive Vocabulary Tutoring</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./style.css?v=2">
+</head>
+<body>
+  <!-- Ambient Background Gradients -->
+  <div class="bg-gradient bg-gradient-1"></div>
+  <div class="bg-gradient bg-gradient-2"></div>
+  <div class="bg-gradient bg-gradient-3"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <i data-lucide="sparkles" class="logo-icon"></i>
+        <span>Vocab<span>Craft</span></span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-settings" class="btn btn-secondary btn-icon-only" title="Gemini API Settings">
+          <i data-lucide="key-round"></i>
+        </button>
+        <button id="btn-toggle-view" class="btn btn-secondary" style="display: none;">
+          <i data-lucide="arrow-left"></i> Back to Creator
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- API Settings Modal / Section -->
+    <section id="sec-api-key" class="settings-panel card slide-up">
+      <div class="panel-header">
+        <div class="header-title">
+          <i data-lucide="key-round" class="title-icon"></i>
+          <h3>Gemini API Key Required</h3>
+        </div>
+        <button id="btn-close-settings" class="btn-close">&times;</button>
+      </div>
+      <p class="panel-desc">To generate customized exercises using AI, please provide a Gemini API Key. The key is stored locally in your browser and is only sent directly to Google's servers.</p>
+      <div class="form-group">
+        <label for="input-api-key">API Key</label>
+        <div class="input-with-action">
+          <input type="password" id="input-api-key" placeholder="AIzaSy...">
+          <button id="btn-toggle-key-visibility" class="btn btn-icon-only" title="Toggle Visibility">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+        <span class="help-text">Don't have one? Get a free key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</span>
+      </div>
+      <div class="panel-actions">
+        <button id="btn-save-key" class="btn btn-primary">
+          <i data-lucide="check"></i> Save API Key
+        </button>
+      </div>
+    </section>
+
+    <!-- App View: Teacher Panel (Exercise Generator) -->
+    <section id="view-teacher" class="app-view active">
+      <div class="hero-section text-center">
+        <h1>Transform Prompts into <span class="gradient-text">Vocabulary Quizzes</span></h1>
+        <p class="hero-subtitle">Type a list of words, select a topic, or describe your lesson. VocabCraft will generate customized, fill-in-the-blank questions with IPA pronunciation and Vietnamese translations.</p>
+      </div>
+
+      <div class="grid grid-2-col">
+        <!-- Generator Controls -->
+        <div class="card card-interactive">
+          <div class="card-header">
+            <i data-lucide="sliders" class="card-icon text-primary"></i>
+            <h2>Exercise Settings</h2>
+          </div>
+          
+          <div class="form-group">
+            <label for="prompt-input">Teacher's Prompt / Words List</label>
+            <textarea id="prompt-input" rows="6" placeholder="Example: Create a fill in the blank type exercises using these words: Con rùa, con chó, con cá heo, con sư tử"></textarea>
+          </div>
+
+          <!-- Presets/Templates -->
+          <div class="presets-section">
+            <label>Try a Preset Prompt</label>
+            <div class="preset-chips">
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nCon rùa, con chim bồ câu, con bướm, con voi">Animals 🦁</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nTáo, chuối, dưa hấu, sầu riêng, cam">Fruits 🍎</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nNhà bếp, phòng ngủ, phòng khách, nhà vệ sinh">Household 🏠</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nBác sĩ, giáo viên, kỹ sư, phi hành gia">Jobs 💼</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button id="btn-generate" class="btn btn-primary btn-full btn-lg">
+              <i data-lucide="wand-2"></i> Generate Questions
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Preview / Ready Panel -->
+        <div class="card bg-blur">
+          <div class="card-header">
+            <i data-lucide="eye" class="card-icon text-secondary"></i>
+            <h2>Quiz Preview</h2>
+          </div>
+          
+          <div id="preview-empty-state" class="empty-state">
+            <i data-lucide="brain-circuit" class="empty-icon"></i>
+            <p>Your generated exercises will appear here.</p>
+            <span class="empty-hint">Enter your words on the left and click "Generate Questions" to see magic.</span>
+          </div>
+
+          <!-- Loader -->
+          <div id="preview-loader" class="loader-container" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating vocabulary exercises using Gemini...</p>
+            <span class="loader-subtext">Translating, formatting pronunciation guides, and creating contextual sentences.</span>
+          </div>
+
+          <!-- Preview Content -->
+          <div id="preview-content" style="display: none;">
+            <div class="preview-meta">
+              <span id="quiz-preview-title" class="badge">Vocabulary Quiz</span>
+              <span id="quiz-preview-count" class="badge badge-secondary">0 Questions</span>
+            </div>
+            <div id="preview-questions-list" class="preview-list">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="card-actions mt-lg">
+              <button id="btn-start-quiz" class="btn btn-success btn-full btn-lg">
+                <i data-lucide="play"></i> Start Quiz with Students
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App View: Quiz Taker (Student Panel) -->
+    <section id="view-quiz" class="app-view">
+      <div class="quiz-container">
+        <!-- Quiz Progress Bar -->
+        <div class="quiz-progress-wrapper">
+          <div class="progress-info">
+            <span id="quiz-question-number">Question 1 of 5</span>
+            <span id="quiz-timer" style="display:none;"><i data-lucide="clock"></i> 00:00</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="quiz-progress-fill" class="progress-bar-fill" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div id="quiz-question-card" class="card card-quiz mt-lg">
+          <div class="quiz-card-glow"></div>
+          
+          <!-- Pronunciation & Audio Guide -->
+          <div class="quiz-pronunciation-box text-center">
+            <div class="pronunciation-row">
+              <span class="pronunciation-label">Pronunciation:</span>
+              <span id="quiz-ipa-pronunciation" class="ipa-text">/ˈtɔː.təs/</span>
+              <button id="btn-speak" class="btn btn-secondary btn-icon-only btn-circle" title="Listen Pronunciation">
+                <i data-lucide="volume-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Blank Question Input -->
+          <div class="quiz-answer-area">
+            <div class="quiz-inputs-grid">
+              <div class="form-group">
+                <label for="input-student-english" class="mb-xs">English Word</label>
+                <input type="text" id="input-student-english" class="input-lg text-center" autocomplete="off" placeholder="Type the English word..." autofocus>
+              </div>
+              <div class="form-group">
+                <label for="input-student-vietnamese" class="mb-xs">Vietnamese Word</label>
+                <input type="text" id="input-student-vietnamese" class="input-lg text-center" autocomplete="off" placeholder="Type the Vietnamese word...">
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-actions mt-xl">
+            <button id="btn-next-question" class="btn btn-primary btn-lg btn-full">
+              Next Question <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App View: AI Grading Loader -->
+    <section id="view-grading" class="app-view">
+      <div class="loader-container card" style="padding: 6rem 2rem; max-width: 600px; margin: 2rem auto; text-align: center;">
+        <div class="spinner"></div>
+        <h2 class="gradient-text">AI Grading Assistant is reviewing...</h2>
+        <p class="loader-subtext" style="font-size: 1.1rem; margin-top: 0.75rem; color: var(--text-secondary);">
+          Gemini is checking if your Vietnamese answers are accurate synonyms or acceptable translations for the English words.
+        </p>
+      </div>
+    </section>
+
+    <!-- App View: Results Screen -->
+    <section id="view-results" class="app-view">
+      <div class="results-container max-width-md text-center">
+        <div class="card card-results">
+          <!-- Celebration Badge / Icon -->
+          <div class="results-icon-wrapper">
+            <i id="results-badge-icon" data-lucide="trophy" class="results-badge"></i>
+          </div>
+          
+          <h1 id="results-headline">Outstanding!</h1>
+          <p id="results-subheadline" class="results-subtitle">You completed the quiz! Here is your performance overview:</p>
+
+          <!-- Score Card Grid -->
+          <div class="score-grid mt-lg">
+            <div class="score-card">
+              <span class="score-val text-success" id="results-score-true">0</span>
+              <span class="score-lbl">True Answers</span>
+            </div>
+            <div class="score-card">
+              <span class="score-val text-error" id="results-score-false">0</span>
+              <span class="score-lbl">False Answers</span>
+            </div>
+          </div>
+
+          <!-- Question Review List -->
+          <div class="results-review-section text-left mt-xl">
+            <h3>Review Questions</h3>
+            <div id="results-review-list" class="review-list mt-md">
+              <!-- Dynamically populated list of detailed answers -->
+            </div>
+          </div>
+
+          <!-- Navigation Actions -->
+          <div class="results-actions mt-xl">
+            <button id="btn-retry-quiz" class="btn btn-secondary btn-lg">
+              <i data-lucide="rotate-ccw"></i> Retry Quiz
+            </button>
+            <button id="btn-new-quiz" class="btn btn-primary btn-lg">
+              <i data-lucide="plus-circle"></i> Create New Quiz
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 VocabCraft. Created for Tutors & Students.</p>
+  </footer>
+
+  <!-- App Script -->
+  <script type="module" src="./app.js?v=2"></script>
+</body>
+</html>
