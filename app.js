@@ -152,10 +152,10 @@ function saveApiKey() {
   if (value) {
     state.apiKey = value;
     localStorage.setItem('vocab_craft_api_key', value);
-    showToast('API Key saved successfully!', 'success');
+    showToast('Lưu khóa API thành công!', 'success');
     elements.secApiKey.classList.remove('active');
   } else {
-    showToast('Please enter a valid key.', 'error');
+    showToast('Vui lòng nhập một mã khóa API hợp lệ.', 'error');
   }
 }
 
@@ -198,12 +198,7 @@ async function generateExercises() {
 
   // Validations
   if (!promptText) {
-    showToast('Please enter words or a prompt first.', 'error');
-    return;
-  }
-
-  if (!promptText) {
-    showToast('Please enter words or a prompt first.', 'error');
+    showToast('Vui lòng nhập danh sách từ vựng hoặc chủ đề gợi ý trước.', 'error');
     return;
   }
 
@@ -236,9 +231,9 @@ async function generateExercises() {
     if (error.message.includes('API Key') || error.message.includes('API key') || error.message.includes('key is not configured')) {
       elements.secApiKey.classList.add('active');
       elements.secApiKey.scrollIntoView({ behavior: 'smooth' });
-      showToast('API Key is missing. Please configure it in Settings (key icon).', 'error');
+      showToast('Không tìm thấy khóa API. Vui lòng cài đặt ở nút hình chìa khóa.', 'error');
     } else {
-      showToast(`Error: ${error.message || 'Failed to generate exercises.'}`, 'error');
+      showToast(`Lỗi: ${error.message || 'Không thể tạo đề bài tập.'}`, 'error');
     }
   } finally {
     elements.btnGenerate.disabled = false;
@@ -338,7 +333,7 @@ Ensure that all words matching the teacher's list are correctly processed and in
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      const errMsg = errData.error || errData.message || response.statusText || 'Backend server failed to generate questions.';
+      const errMsg = errData.error || errData.message || response.statusText || 'Lỗi kết nối máy chủ không thể tạo bài tập.';
       throw new Error(errMsg);
     }
 
@@ -347,8 +342,8 @@ Ensure that all words matching the teacher's list are correctly processed and in
 }
 
 function renderPreviewList(data) {
-  elements.quizPreviewTitle.innerText = data.title || 'Vocabulary Quiz';
-  elements.quizPreviewCount.innerText = `${data.questions.length} Questions`;
+  elements.quizPreviewTitle.innerText = data.title || 'Đề Ôn Tập Từ Vựng';
+  elements.quizPreviewCount.innerText = `${data.questions.length} Câu Hỏi`;
   elements.previewQuestionsList.innerHTML = '';
 
   data.questions.forEach(q => {
@@ -370,7 +365,7 @@ function renderPreviewList(data) {
 // ==========================================================================
 function speakWord(word) {
   if (!('speechSynthesis' in window)) {
-    showToast('Your browser does not support text-to-speech.', 'error');
+    showToast('Trình duyệt của bạn không hỗ trợ đọc phát âm.', 'error');
     return;
   }
 
@@ -398,7 +393,7 @@ function speakWord(word) {
 // ==========================================================================
 function startQuiz() {
   if (state.questions.length === 0) {
-    showToast('No questions loaded. Please generate exercises first.', 'error');
+    showToast('Chưa có danh sách câu hỏi. Vui lòng soạn đề bài trước.', 'error');
     return;
   }
 
@@ -416,7 +411,7 @@ function showQuestion(index) {
   const q = state.questions[index];
 
   // Update indices and progress bars
-  elements.quizQuestionNumber.innerText = `Question ${index + 1} of ${state.questions.length}`;
+  elements.quizQuestionNumber.innerText = `Câu hỏi ${index + 1} / ${state.questions.length}`;
   const progressPercent = ((index) / state.questions.length) * 100;
   elements.quizProgressFill.style.width = `${progressPercent}%`;
 
@@ -434,9 +429,9 @@ function showQuestion(index) {
 
   // Set button text: "Next Question" or "Finish Quiz"
   if (index === state.questions.length - 1) {
-    elements.btnNextQuestion.innerHTML = `Finish Quiz <i data-lucide="check-circle"></i>`;
+    elements.btnNextQuestion.innerHTML = `Hoàn Thành Bài Tập <i data-lucide="check-circle"></i>`;
   } else {
-    elements.btnNextQuestion.innerHTML = `Next Question <i data-lucide="arrow-right"></i>`;
+    elements.btnNextQuestion.innerHTML = `Câu Tiếp Theo <i data-lucide="arrow-right"></i>`;
   }
   lucide.createIcons();
 }
@@ -445,7 +440,7 @@ function nextQuestion() {
   try {
     const currentQuestion = state.questions[state.currentQuestionIndex];
     if (!currentQuestion) {
-      showToast('Error: Current question data is missing.', 'error');
+      showToast('Lỗi: Thiếu dữ liệu câu hỏi hiện tại.', 'error');
       return;
     }
 
@@ -453,7 +448,7 @@ function nextQuestion() {
     const studentVietnamese = (elements.inputStudentVietnamese.value || '').trim();
 
     if (!studentEnglish && !studentVietnamese) {
-      showToast('Please type an answer before proceeding.', 'info');
+      showToast('Vui lòng gõ câu trả lời trước khi chuyển tiếp.', 'info');
       return;
     }
 
@@ -485,7 +480,7 @@ function nextQuestion() {
     }
   } catch (error) {
     console.error('Error in nextQuestion:', error);
-    showToast(`App Error: ${error.message}`, 'error');
+    showToast(`Lỗi ứng dụng: ${error.message}`, 'error');
   }
 }
 
@@ -506,20 +501,20 @@ function showResults() {
   elements.resultsScoreFalse.innerText = falseCount;
 
   // Grade styling and messages
-  let headline = 'Excellent!';
+  let headline = 'Hoàn Thành!';
   let iconName = 'trophy';
   
   if (percentage === 100) {
-    headline = 'Outstanding! Perfect Score! 🏆';
+    headline = 'Xuất Sắc! Điểm tuyệt đối! 🏆';
     iconName = 'award';
   } else if (percentage >= 80) {
-    headline = 'Great Job! 🌟';
+    headline = 'Làm Tốt Lắm! 🌟';
     iconName = 'thumbs-up';
   } else if (percentage >= 50) {
-    headline = 'Good Effort! Keep practicing. 👍';
+    headline = 'Có Cố Gắng! Hãy tiếp tục ôn luyện nhé. 👍';
     iconName = 'smile';
   } else {
-    headline = 'Keep Trying! Practice makes perfect. 💪';
+    headline = 'Cố Gắng Lên! Luyện tập nhiều con sẽ tiến bộ. 💪';
     iconName = 'rotate-ccw';
   }
 
@@ -545,17 +540,17 @@ function showResults() {
     item.innerHTML = `
       <div class="review-content">
         <div class="review-words">
-          <span>Correct: ${q.english_word}</span>
+          <span>Đáp án đúng: ${q.english_word}</span>
           <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9em; font-family: monospace; margin: 0 0.5rem;">${q.pronunciation}</span>
           <span style="font-weight: 500; color: var(--text-secondary);">&rarr; ${q.vietnamese_word}</span>
         </div>
         <div class="review-your-answer">
-          Your answers: 
-          English: <span class="${isEnglishCorrect ? 'text-success' : 'text-error'}">${escapeHtml(studentEngStr || 'empty')}</span> | 
-          Vietnamese: <span class="${isVietnameseCorrect ? 'text-success' : 'text-error'}">${escapeHtml(studentVieStr || 'empty')}</span>
+          Bài làm của con: 
+          Tiếng Anh: <span class="${isEnglishCorrect ? 'text-success' : 'text-error'}">${escapeHtml(studentEngStr || 'để trống')}</span> | 
+          Tiếng Việt: <span class="${isVietnameseCorrect ? 'text-success' : 'text-error'}">${escapeHtml(studentVieStr || 'để trống')}</span>
         </div>
         ${feedbackStr ? `<div class="review-ai-feedback mt-xs" style="font-size: 0.85rem; color: #a5b4fc; font-style: italic; border-left: 2px solid #8b5cf6; padding-left: 0.5rem; margin-top: 0.25rem;">
-          🤖 AI: ${escapeHtml(feedbackStr)}
+          🤖 Trợ lý AI: ${escapeHtml(feedbackStr)}
         </div>` : ''}
       </div>
       <button class="btn btn-secondary btn-icon-only btn-circle btn-sm-speak" data-word="${q.english_word}" title="Re-listen">
@@ -683,7 +678,7 @@ Always respond in valid JSON matching the specified schema.`;
 
   } catch (error) {
     console.error('Error during AI grading:', error);
-    showToast(`AI Grading failed, falling back to exact matching. Details: ${error.message}`, 'error');
+    showToast(`Hệ thống AI bận, tự động chuyển sang so khớp từ vựng chính xác. Chi tiết: ${error.message}`, 'error');
     
     // Fallback: If AI fails, use fallback exact matching to ensure the app doesn't break
     fallbackGrading();
@@ -735,8 +730,8 @@ function fallbackGrading() {
       record.isEnglishCorrect = isEnglishCorrect;
       record.isVietnameseCorrect = isVietnameseCorrect;
       record.vietnameseFeedback = isVietnameseCorrect 
-        ? 'Chính xác (So khớp chính xác)' 
-        : `Chưa đúng. Từ mong muốn: "${q.vietnamese_word}"`;
+        ? 'Chính xác' 
+        : `Chưa chính xác hoàn toàn. Nghĩa dịch đúng: "${q.vietnamese_word}"`;
 
       if (isCorrect) {
         state.score++;

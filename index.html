@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VocabCraft - Interactive Vocabulary Tutoring</title>
+  <title>Góc Học Từ Vựng - Luyện Từ Vựng Tiếng Anh Cho Con</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,14 +24,14 @@
     <div class="header-container">
       <div class="logo">
         <i data-lucide="sparkles" class="logo-icon"></i>
-        <span>Vocab<span>Craft</span></span>
+        <span>Góc Học <span>Từ Vựng</span></span>
       </div>
       <div class="header-actions">
-        <button id="btn-settings" class="btn btn-secondary btn-icon-only" title="Gemini API Settings">
+        <button id="btn-settings" class="btn btn-secondary btn-icon-only" title="Cấu hình Gemini API">
           <i data-lucide="key-round"></i>
         </button>
         <button id="btn-toggle-view" class="btn btn-secondary" style="display: none;">
-          <i data-lucide="arrow-left"></i> Back to Creator
+          <i data-lucide="arrow-left"></i> Quay lại trang tạo câu hỏi
         </button>
       </div>
     </div>
@@ -45,24 +45,24 @@
       <div class="panel-header">
         <div class="header-title">
           <i data-lucide="key-round" class="title-icon"></i>
-          <h3>Gemini API Key Required</h3>
+          <h3>Cài đặt khóa Gemini API (Tùy chọn)</h3>
         </div>
         <button id="btn-close-settings" class="btn-close">&times;</button>
       </div>
-      <p class="panel-desc">To generate customized exercises using AI, please provide a Gemini API Key. The key is stored locally in your browser and is only sent directly to Google's servers.</p>
+      <p class="panel-desc">Để tự tạo các bài tập từ vựng bằng AI, bạn có thể cung cấp khóa Gemini API riêng. Khóa này chỉ được lưu trữ trên trình duyệt của bạn và gửi trực tiếp tới máy chủ Google.</p>
       <div class="form-group">
-        <label for="input-api-key">API Key</label>
+        <label for="input-api-key">Mã Khóa API Key</label>
         <div class="input-with-action">
           <input type="password" id="input-api-key" placeholder="AIzaSy...">
-          <button id="btn-toggle-key-visibility" class="btn btn-icon-only" title="Toggle Visibility">
+          <button id="btn-toggle-key-visibility" class="btn btn-icon-only" title="Ẩn/Hiện khóa">
             <i data-lucide="eye"></i>
           </button>
         </div>
-        <span class="help-text">Don't have one? Get a free key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</span>
+        <span class="help-text">Nếu chưa có khóa, bạn có thể đăng ký nhận khóa miễn phí tại <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</span>
       </div>
       <div class="panel-actions">
         <button id="btn-save-key" class="btn btn-primary">
-          <i data-lucide="check"></i> Save API Key
+          <i data-lucide="check"></i> Lưu API Key
         </button>
       </div>
     </section>
@@ -70,8 +70,8 @@
     <!-- App View: Teacher Panel (Exercise Generator) -->
     <section id="view-teacher" class="app-view active">
       <div class="hero-section text-center">
-        <h1>Transform Prompts into <span class="gradient-text">Vocabulary Quizzes</span></h1>
-        <p class="hero-subtitle">Type a list of words, select a topic, or describe your lesson. VocabCraft will generate customized, fill-in-the-blank questions with IPA pronunciation and Vietnamese translations.</p>
+        <h1>Biến Từ Vựng Thành <span class="gradient-text">Bài Tập Học Tập</span></h1>
+        <p class="hero-subtitle">Nhập danh sách từ vựng hoặc mô tả bài học. Góc Học Từ Vựng sẽ tự động soạn các bài luyện tập điền từ chuẩn IPA Anh-Mỹ kèm nghĩa dịch tiếng Việt.</p>
       </div>
 
       <div class="grid grid-2-col">
@@ -79,28 +79,28 @@
         <div class="card card-interactive">
           <div class="card-header">
             <i data-lucide="sliders" class="card-icon text-primary"></i>
-            <h2>Exercise Settings</h2>
+            <h2>Cấu hình Bài Tập</h2>
           </div>
           
           <div class="form-group">
-            <label for="prompt-input">Teacher's Prompt / Words List</label>
-            <textarea id="prompt-input" rows="6" placeholder="Example: Create a fill in the blank type exercises using these words: Con rùa, con chó, con cá heo, con sư tử"></textarea>
+            <label for="prompt-input">Danh sách Từ Vựng hoặc Mô Tả Chủ Đề</label>
+            <textarea id="prompt-input" rows="6" placeholder="Ví dụ: Tạo bài tập điền từ cho các từ sau: Con rùa, con mèo, con chó, con cá heo, con sư tử..."></textarea>
           </div>
 
           <!-- Presets/Templates -->
           <div class="presets-section">
-            <label>Try a Preset Prompt</label>
+            <label>Chọn Nhanh Chủ Đề Gợi Ý</label>
             <div class="preset-chips">
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nCon rùa, con chim bồ câu, con bướm, con voi">Animals 🦁</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nTáo, chuối, dưa hấu, sầu riêng, cam">Fruits 🍎</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nNhà bếp, phòng ngủ, phòng khách, nhà vệ sinh">Household 🏠</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nBác sĩ, giáo viên, kỹ sư, phi hành gia">Jobs 💼</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nCon rùa, con chim bồ câu, con bướm, con voi">Động vật 🦁</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nTáo, chuối, dưa hấu, sầu riêng, cam">Trái cây 🍎</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nNhà bếp, phòng ngủ, phòng khách, nhà vệ sinh">Nhà cửa 🏠</button>
+              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nBác sĩ, giáo viên, kỹ sư, phi hành gia">Nghề nghiệp 💼</button>
             </div>
           </div>
 
           <div class="card-actions">
             <button id="btn-generate" class="btn btn-primary btn-full btn-lg">
-              <i data-lucide="wand-2"></i> Generate Questions
+              <i data-lucide="wand-2"></i> Bắt Đầu Tạo Câu Hỏi
             </button>
           </div>
         </div>
@@ -109,34 +109,34 @@
         <div class="card bg-blur">
           <div class="card-header">
             <i data-lucide="eye" class="card-icon text-secondary"></i>
-            <h2>Quiz Preview</h2>
+            <h2>Xem Trước Câu Hỏi</h2>
           </div>
           
           <div id="preview-empty-state" class="empty-state">
             <i data-lucide="brain-circuit" class="empty-icon"></i>
-            <p>Your generated exercises will appear here.</p>
-            <span class="empty-hint">Enter your words on the left and click "Generate Questions" to see magic.</span>
+            <p>Bài tập từ vựng soạn bằng AI sẽ hiển thị ở đây.</p>
+            <span class="empty-hint">Vui lòng nhập từ ở khung bên trái và bấm "Bắt Đầu Tạo Câu Hỏi" để tiếp tục.</span>
           </div>
 
           <!-- Loader -->
           <div id="preview-loader" class="loader-container" style="display: none;">
             <div class="spinner"></div>
-            <p>Generating vocabulary exercises using Gemini...</p>
-            <span class="loader-subtext">Translating, formatting pronunciation guides, and creating contextual sentences.</span>
+            <p>Hệ thống AI đang tự động soạn bài tập...</p>
+            <span class="loader-subtext">Đang dịch nghĩa, tìm phát âm IPA Anh-Mỹ và xây dựng câu ngữ cảnh cho bài luyện tập của con.</span>
           </div>
 
           <!-- Preview Content -->
           <div id="preview-content" style="display: none;">
             <div class="preview-meta">
-              <span id="quiz-preview-title" class="badge">Vocabulary Quiz</span>
-              <span id="quiz-preview-count" class="badge badge-secondary">0 Questions</span>
+              <span id="quiz-preview-title" class="badge">Đề Ôn Tập Từ Vựng</span>
+              <span id="quiz-preview-count" class="badge badge-secondary">0 Câu Hỏi</span>
             </div>
             <div id="preview-questions-list" class="preview-list">
               <!-- Dynamically populated -->
             </div>
             <div class="card-actions mt-lg">
               <button id="btn-start-quiz" class="btn btn-success btn-full btn-lg">
-                <i data-lucide="play"></i> Start Quiz with Students
+                <i data-lucide="play"></i> Bắt đầu Ôn Tập (Cho Học Sinh)
               </button>
             </div>
           </div>
@@ -150,7 +150,7 @@
         <!-- Quiz Progress Bar -->
         <div class="quiz-progress-wrapper">
           <div class="progress-info">
-            <span id="quiz-question-number">Question 1 of 5</span>
+            <span id="quiz-question-number">Câu hỏi 1 / 5</span>
             <span id="quiz-timer" style="display:none;"><i data-lucide="clock"></i> 00:00</span>
           </div>
           <div class="progress-bar-bg">
@@ -165,9 +165,9 @@
           <!-- Pronunciation & Audio Guide -->
           <div class="quiz-pronunciation-box text-center">
             <div class="pronunciation-row">
-              <span class="pronunciation-label">Pronunciation:</span>
+              <span class="pronunciation-label">Phát âm chuẩn (IPA):</span>
               <span id="quiz-ipa-pronunciation" class="ipa-text">/ˈtɔː.təs/</span>
-              <button id="btn-speak" class="btn btn-secondary btn-icon-only btn-circle" title="Listen Pronunciation">
+              <button id="btn-speak" class="btn btn-secondary btn-icon-only btn-circle" title="Nghe phát âm từ vựng">
                 <i data-lucide="volume-2"></i>
               </button>
             </div>
@@ -177,19 +177,19 @@
           <div class="quiz-answer-area">
             <div class="quiz-inputs-grid">
               <div class="form-group">
-                <label for="input-student-english" class="mb-xs">English Word</label>
-                <input type="text" id="input-student-english" class="input-lg text-center" autocomplete="off" placeholder="Type the English word..." autofocus>
+                <label for="input-student-english" class="mb-xs">Viết Từ Tiếng Anh</label>
+                <input type="text" id="input-student-english" class="input-lg text-center" autocomplete="off" placeholder="Gõ từ tiếng Anh..." autofocus>
               </div>
               <div class="form-group">
-                <label for="input-student-vietnamese" class="mb-xs">Vietnamese Word</label>
-                <input type="text" id="input-student-vietnamese" class="input-lg text-center" autocomplete="off" placeholder="Type the Vietnamese word...">
+                <label for="input-student-vietnamese" class="mb-xs">Nghĩa dịch Tiếng Việt</label>
+                <input type="text" id="input-student-vietnamese" class="input-lg text-center" autocomplete="off" placeholder="Gõ nghĩa tiếng Việt...">
               </div>
             </div>
           </div>
 
           <div class="quiz-actions mt-xl">
             <button id="btn-next-question" class="btn btn-primary btn-lg btn-full">
-              Next Question <i data-lucide="arrow-right"></i>
+              Câu tiếp theo <i data-lucide="arrow-right"></i>
             </button>
           </div>
         </div>
@@ -200,9 +200,9 @@
     <section id="view-grading" class="app-view">
       <div class="loader-container card" style="padding: 6rem 2rem; max-width: 600px; margin: 2rem auto; text-align: center;">
         <div class="spinner"></div>
-        <h2 class="gradient-text">AI Grading Assistant is reviewing...</h2>
+        <h2 class="gradient-text">Hệ Thống AI Đang Chấm Điểm...</h2>
         <p class="loader-subtext" style="font-size: 1.1rem; margin-top: 0.75rem; color: var(--text-secondary);">
-          Gemini is checking if your Vietnamese answers are accurate synonyms or acceptable translations for the English words.
+          Trợ lý AI đang chấm điểm và phân tích câu trả lời tiếng Việt của con để chấp nhận các từ đồng nghĩa phù hợp.
         </p>
       </div>
     </section>
@@ -216,24 +216,24 @@
             <i id="results-badge-icon" data-lucide="trophy" class="results-badge"></i>
           </div>
           
-          <h1 id="results-headline">Outstanding!</h1>
-          <p id="results-subheadline" class="results-subtitle">You completed the quiz! Here is your performance overview:</p>
+          <h1 id="results-headline">Hoàn Thành!</h1>
+          <p id="results-subheadline" class="results-subtitle">Con đã hoàn thành bài ôn tập từ vựng! Dưới đây là kết quả kiểm tra:</p>
 
           <!-- Score Card Grid -->
           <div class="score-grid mt-lg">
             <div class="score-card">
               <span class="score-val text-success" id="results-score-true">0</span>
-              <span class="score-lbl">True Answers</span>
+              <span class="score-lbl">Câu Đúng (True)</span>
             </div>
             <div class="score-card">
               <span class="score-val text-error" id="results-score-false">0</span>
-              <span class="score-lbl">False Answers</span>
+              <span class="score-lbl">Câu Chưa Đúng (False)</span>
             </div>
           </div>
 
           <!-- Question Review List -->
           <div class="results-review-section text-left mt-xl">
-            <h3>Review Questions</h3>
+            <h3>Xem Lại Đáp Án Chi Tiết</h3>
             <div id="results-review-list" class="review-list mt-md">
               <!-- Dynamically populated list of detailed answers -->
             </div>
@@ -242,10 +242,10 @@
           <!-- Navigation Actions -->
           <div class="results-actions mt-xl">
             <button id="btn-retry-quiz" class="btn btn-secondary btn-lg">
-              <i data-lucide="rotate-ccw"></i> Retry Quiz
+              <i data-lucide="rotate-ccw"></i> Ôn Tập Lại Đề Này
             </button>
             <button id="btn-new-quiz" class="btn btn-primary btn-lg">
-              <i data-lucide="plus-circle"></i> Create New Quiz
+              <i data-lucide="plus-circle"></i> Tạo Đề Ôn Tập Mới
             </button>
           </div>
         </div>
@@ -256,7 +256,7 @@
 
   <!-- Footer -->
   <footer>
-    <p>&copy; 2026 VocabCraft. Created for Tutors & Students.</p>
+    <p>&copy; 2026 Góc Học Từ Vựng. Đồng hành cùng Ba Mẹ giúp con học tốt tiếng Anh mỗi ngày.</p>
   </footer>
 
   <!-- App Script -->

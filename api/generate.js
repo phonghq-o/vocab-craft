@@ -63,6 +63,7 @@ For each word:
 3. Formulate an interesting English sentence with a blank (represented as "_______") that the student must fill with the English word.
 4. Set the correct_answer field strictly in the format: "english_word:vietnamese_word" (all lowercase, e.g. "tortoise:con rùa").
 
+Ensure that the title of the quiz generated is strictly in Vietnamese.
 Ensure that all words matching the teacher's list are correctly processed and included in the output.`;
 
   try {
