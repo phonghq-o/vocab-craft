@@ -1061,3 +1061,37 @@ input, textarea, button {
 header {
   padding-top: max(1rem, env(safe-area-inset-top));
 }
+
+.quiz-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .quiz-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.share-link-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  text-align: left;
+}
+
+#quiz-timer.warning {
+  color: var(--color-error) !important;
+  animation: pulse-red 0.8s infinite alternate;
+}
+
+@keyframes pulse-red {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.08);
+    opacity: 0.7;
+  }
+}

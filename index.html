@@ -67,6 +67,43 @@
       </div>
     </section>
 
+    <!-- App View: Loading Quiz -->
+    <section id="view-loading-quiz" class="app-view">
+      <div class="loader-container card" style="padding: 6rem 2rem; max-width: 600px; margin: 2rem auto; text-align: center;">
+        <div class="spinner"></div>
+        <h2 class="gradient-text">Đang tải đề ôn tập...</h2>
+        <p class="loader-subtext" style="font-size: 1.1rem; margin-top: 0.75rem; color: var(--text-secondary);">
+          Vui lòng đợi giây lát, hệ thống đang lấy dữ liệu đề bài tập cho con.
+        </p>
+      </div>
+    </section>
+
+    <!-- App View: Mode Selection -->
+    <section id="view-mode-selection" class="app-view">
+      <div class="card card-interactive max-width-md text-center" style="margin: 3rem auto; padding: 3rem 2rem;">
+        <div class="results-icon-wrapper" style="background: rgba(99, 102, 241, 0.1); margin: 0 auto 1.5rem auto; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+          <i data-lucide="help-circle" class="text-primary" style="width: 40px; height: 40px;"></i>
+        </div>
+        <h2 class="gradient-text">Con đã sẵn sàng làm bài tập chưa?</h2>
+        <p class="loader-subtext" style="font-size: 1.1rem; margin-top: 0.5rem; color: var(--text-secondary); margin-bottom: 2.5rem;">
+          Vui lòng chọn chế độ học tập phù hợp để bắt đầu ôn luyện từ vựng:
+        </p>
+        
+        <div class="grid grid-2-col gap-md">
+          <button id="btn-mode-practice" class="btn btn-secondary btn-lg btn-full" style="display: flex; flex-direction: column; padding: 2rem; gap: 0.75rem; min-height: 140px; justify-content: center;">
+            <i data-lucide="book-open" style="width: 32px; height: 32px; color: var(--color-secondary);"></i>
+            <span style="font-size: 1.25rem; font-weight: 700; display: block;">Luyện Tập</span>
+            <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted); display: block;">Không giới hạn thời gian làm câu hỏi</span>
+          </button>
+          <button id="btn-mode-test" class="btn btn-primary btn-lg btn-full" style="display: flex; flex-direction: column; padding: 2rem; gap: 0.75rem; min-height: 140px; justify-content: center;">
+            <i data-lucide="timer" style="width: 32px; height: 32px; color: white;"></i>
+            <span style="font-size: 1.25rem; font-weight: 700; display: block;">Kiểm Tra</span>
+            <span style="font-size: 0.85rem; font-weight: normal; color: rgba(255,255,255,0.7); display: block;">Giới hạn 45 giây cho mỗi câu hỏi</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- App View: Teacher Panel (Exercise Generator) -->
     <section id="view-teacher" class="app-view active">
       <div class="hero-section text-center">
@@ -98,7 +135,7 @@
             </div>
           </div>
 
-          <div class="card-actions">
+          <div class="card-actions mt-lg">
             <button id="btn-generate" class="btn btn-primary btn-full btn-lg">
               <i data-lucide="wand-2"></i> Bắt Đầu Tạo Câu Hỏi
             </button>
@@ -134,10 +171,26 @@
             <div id="preview-questions-list" class="preview-list">
               <!-- Dynamically populated -->
             </div>
-            <div class="card-actions mt-lg">
+            
+            <!-- Actions (Start & Share) -->
+            <div class="quiz-actions-grid mt-lg">
               <button id="btn-start-quiz" class="btn btn-success btn-full btn-lg">
-                <i data-lucide="play"></i> Bắt đầu Ôn Tập (Cho Học Sinh)
+                <i data-lucide="play"></i> Bắt đầu Ôn Tập (Học Sinh)
               </button>
+              <button id="btn-share-quiz" class="btn btn-secondary btn-full btn-lg">
+                <i data-lucide="share-2"></i> Lưu Đề & Lấy Link Cho Mẹ
+              </button>
+            </div>
+
+            <!-- Share Link Container (Initially Hidden) -->
+            <div id="share-link-container" class="share-link-box mt-md" style="display: none;">
+              <label class="mb-xs" style="text-align: left; display: block; font-size: 0.85rem; color: var(--text-secondary);">Gửi liên kết này cho Phụ Huynh để ôn tập cùng con:</label>
+              <div class="input-with-action">
+                <input type="text" id="share-link-input" readonly placeholder="Đang tạo liên kết...">
+                <button id="btn-copy-share-link" class="btn btn-icon-only" title="Sao chép liên kết">
+                  <i data-lucide="copy"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -10,7 +10,10 @@ const state = {
   studentAnswers: [],
   score: 0,
   quizMode: false, // false = creator, true = quiz
-  isAnswerChecked: false
+  isAnswerChecked: false,
+  timerMode: 'practice', // 'practice' or 'test'
+  timerInterval: null,
+  timeLeft: 45
 };
 
 // DOM Elements
@@ -29,6 +32,8 @@ const elements = {
   viewQuiz: document.getElementById('view-quiz'),
   viewResults: document.getElementById('view-results'),
   viewGrading: document.getElementById('view-grading'),
+  viewLoadingQuiz: document.getElementById('view-loading-quiz'),
+  viewModeSelection: document.getElementById('view-mode-selection'),
 
   // Teacher / Creator
   promptInput: document.getElementById('prompt-input'),
@@ -40,6 +45,10 @@ const elements = {
   quizPreviewCount: document.getElementById('quiz-preview-count'),
   previewQuestionsList: document.getElementById('preview-questions-list'),
   btnStartQuiz: document.getElementById('btn-start-quiz'),
+  btnShareQuiz: document.getElementById('btn-share-quiz'),
+  shareLinkContainer: document.getElementById('share-link-container'),
+  shareLinkInput: document.getElementById('share-link-input'),
+  btnCopyShareLink: document.getElementById('btn-copy-share-link'),
   presetChips: document.querySelectorAll('.chip'),
 
   // Quiz Taker
@@ -50,6 +59,9 @@ const elements = {
   inputStudentEnglish: document.getElementById('input-student-english'),
   inputStudentVietnamese: document.getElementById('input-student-vietnamese'),
   btnNextQuestion: document.getElementById('btn-next-question'),
+  quizTimer: document.getElementById('quiz-timer'),
+  btnModePractice: document.getElementById('btn-mode-practice'),
+  btnModeTest: document.getElementById('btn-mode-test'),
 
   // Results
   resultsHeadline: document.getElementById('results-headline'),
@@ -74,6 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupEventListeners();
+
+  // URL Parameter Routing (Load shared quiz)
+  const urlParams = new URLSearchParams(window.location.search);
+  const quizId = urlParams.get('quiz');
+  if (quizId) {
+    loadSharedQuiz(quizId);
+  }
 });
 
 // ==========================================================================
@@ -139,9 +158,20 @@ function setupEventListeners() {
 
   // Back button in header
   elements.btnToggleView.addEventListener('click', () => {
+    clearInterval(state.timerInterval);
     switchView('view-teacher');
     elements.btnToggleView.style.display = 'none';
+    // Clear sharing query parameter if returning to creator
+    window.history.replaceState({}, document.title, window.location.pathname);
   });
+
+  // Sharing Actions
+  if (elements.btnShareQuiz) elements.btnShareQuiz.addEventListener('click', saveQuiz);
+  if (elements.btnCopyShareLink) elements.btnCopyShareLink.addEventListener('click', copyShareLink);
+
+  // Mode Selection Actions
+  if (elements.btnModePractice) elements.btnModePractice.addEventListener('click', () => selectQuizMode('practice'));
+  if (elements.btnModeTest) elements.btnModeTest.addEventListener('click', () => selectQuizMode('test'));
 }
 
 // ==========================================================================
@@ -182,6 +212,8 @@ function switchView(viewId) {
   elements.viewQuiz.classList.remove('active');
   elements.viewResults.classList.remove('active');
   if (elements.viewGrading) elements.viewGrading.classList.remove('active');
+  if (elements.viewLoadingQuiz) elements.viewLoadingQuiz.classList.remove('active');
+  if (elements.viewModeSelection) elements.viewModeSelection.classList.remove('active');
 
   // Show active view
   const activeView = document.getElementById(viewId);
@@ -397,18 +429,33 @@ function startQuiz() {
     return;
   }
 
+  elements.btnToggleView.style.display = 'inline-flex';
+  switchView('view-mode-selection');
+}
+
+function selectQuizMode(mode) {
+  state.timerMode = mode;
+  launchQuiz();
+}
+
+function launchQuiz() {
   state.currentQuestionIndex = 0;
   state.studentAnswers = [];
   state.score = 0;
   state.quizMode = true;
 
-  elements.btnToggleView.style.display = 'inline-flex';
   switchView('view-quiz');
   showQuestion(0);
 }
 
 function showQuestion(index) {
   const q = state.questions[index];
+
+  // Reset/Clear timer
+  clearInterval(state.timerInterval);
+  if (elements.quizTimer) {
+    elements.quizTimer.classList.remove('warning');
+  }
 
   // Update indices and progress bars
   elements.quizQuestionNumber.innerText = `Câu hỏi ${index + 1} / ${state.questions.length}`;
@@ -434,10 +481,47 @@ function showQuestion(index) {
     elements.btnNextQuestion.innerHTML = `Câu Tiếp Theo <i data-lucide="arrow-right"></i>`;
   }
   lucide.createIcons();
+
+  // Handle Practice vs Test Timer Setup
+  if (state.timerMode === 'test') {
+    if (elements.quizTimer) {
+      elements.quizTimer.style.display = 'inline-flex';
+      state.timeLeft = 45;
+      elements.quizTimer.innerHTML = `<i data-lucide="clock"></i> 00:45`;
+      lucide.createIcons();
+
+      state.timerInterval = setInterval(() => {
+        state.timeLeft--;
+
+        // Update UI Text
+        const secs = state.timeLeft < 10 ? '0' + state.timeLeft : state.timeLeft;
+        elements.quizTimer.innerHTML = `<i data-lucide="clock"></i> 00:${secs}`;
+        lucide.createIcons();
+
+        // Under 10s warnings
+        if (state.timeLeft <= 10) {
+          elements.quizTimer.classList.add('warning');
+        }
+
+        if (state.timeLeft <= 0) {
+          clearInterval(state.timerInterval);
+          showToast('Hết thời gian làm câu hỏi! Chuyển sang câu tiếp theo.', 'info');
+          nextQuestion();
+        }
+      }, 1000);
+    }
+  } else {
+    if (elements.quizTimer) {
+      elements.quizTimer.style.display = 'none';
+    }
+  }
 }
 
 function nextQuestion() {
   try {
+    // Clear interval immediately when moving forward
+    clearInterval(state.timerInterval);
+
     const currentQuestion = state.questions[state.currentQuestionIndex];
     if (!currentQuestion) {
       showToast('Lỗi: Thiếu dữ liệu câu hỏi hiện tại.', 'error');
@@ -447,7 +531,9 @@ function nextQuestion() {
     const studentEnglish = (elements.inputStudentEnglish.value || '').trim();
     const studentVietnamese = (elements.inputStudentVietnamese.value || '').trim();
 
-    if (!studentEnglish && !studentVietnamese) {
+    // Auto-submission is allowed in test mode if time expires, 
+    // but if triggered by user click, we require at least one input in practice mode.
+    if (state.timeLeft > 0 && !studentEnglish && !studentVietnamese) {
       showToast('Vui lòng gõ câu trả lời trước khi chuyển tiếp.', 'info');
       return;
     }
@@ -488,6 +574,7 @@ function nextQuestion() {
 // Results & Evaluation
 // ==========================================================================
 function showResults() {
+  clearInterval(state.timerInterval);
   switchView('view-results');
   
   // Set progress fill to 100% on completion
@@ -744,6 +831,140 @@ function fallbackGrading() {
 
 function retryQuiz() {
   startQuiz();
+}
+
+// ==========================================================================
+// Quiz Saving & Sharing API Calls
+// ==========================================================================
+async function saveQuiz() {
+  if (state.questions.length === 0) return;
+  
+  elements.btnShareQuiz.disabled = true;
+  const originalContent = elements.btnShareQuiz.innerHTML;
+  elements.btnShareQuiz.innerHTML = `<span class="spinner" style="width:16px; height:16px; margin:0; display:inline-block; border-width:2px; vertical-align:middle;"></span> Đang lưu...`;
+  
+  const quizDataObj = {
+    title: elements.quizPreviewTitle.innerText || 'Đề Ôn Tập Từ Vựng',
+    questions: state.questions
+  };
+  
+  const tempId = 'local_' + Math.random().toString(36).substring(2, 10);
+  
+  try {
+    const response = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(quizDataObj)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server returned status code ${response.status}`);
+    }
+    
+    const resData = await response.json();
+    if (!resData.id) throw new Error('Mã ID của đề bị trống.');
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${resData.id}`;
+    elements.shareLinkInput.value = shareUrl;
+    elements.shareLinkContainer.style.display = 'block';
+    
+    showToast('Lưu đề thành công! Sao chép liên kết để gửi cho ba mẹ.', 'success');
+  } catch (error) {
+    console.warn('Backend API not available, saving to localStorage:', error);
+    
+    // Fallback: Store quiz data directly in localStorage
+    localStorage.setItem(tempId, JSON.stringify(quizDataObj));
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${tempId}`;
+    elements.shareLinkInput.value = shareUrl;
+    elements.shareLinkContainer.style.display = 'block';
+    
+    showToast('Lưu đề thành công (lưu cục bộ trên trình duyệt máy bạn)!', 'success');
+  } finally {
+    elements.btnShareQuiz.disabled = false;
+    elements.btnShareQuiz.innerHTML = originalContent;
+    lucide.createIcons();
+  }
+}
+
+function copyShareLink() {
+  const input = elements.shareLinkInput;
+  if (!input.value) return;
+  
+  input.select();
+  input.setSelectionRange(0, 99999);
+  
+  navigator.clipboard.writeText(input.value)
+    .then(() => {
+      showToast('Đã sao chép liên kết vào bộ nhớ!', 'success');
+    })
+    .catch(err => {
+      console.error('Failed to copy: ', err);
+      showToast('Lỗi khi sao chép liên kết.', 'error');
+    });
+}
+
+async function loadSharedQuiz(quizId) {
+  switchView('view-loading-quiz');
+  elements.btnToggleView.style.display = 'none';
+  
+  // Try loading from localStorage first if it's a local ID
+  if (quizId.startsWith('local_')) {
+    const localData = localStorage.getItem(quizId);
+    if (localData) {
+      try {
+        const data = JSON.parse(localData);
+        state.questions = data.questions;
+        elements.quizPreviewTitle.innerText = data.title || 'Đề Ôn Tập Từ Vựng';
+        // Go to mode selection
+        elements.btnToggleView.style.display = 'inline-flex';
+        switchView('view-mode-selection');
+        showToast('Đã tải đề ôn tập từ bộ nhớ trình duyệt!', 'success');
+        return;
+      } catch (err) {
+        console.error('Failed to parse local quiz:', err);
+      }
+    }
+  }
+  
+  try {
+    const response = await fetch(`/api/load?id=${quizId}`);
+    if (!response.ok) {
+      // Secondary fallback check for localStorage in case of standard ID offline
+      const localData = localStorage.getItem(quizId);
+      if (localData) {
+        const data = JSON.parse(localData);
+        state.questions = data.questions;
+        elements.quizPreviewTitle.innerText = data.title || 'Đề Ôn Tập Từ Vựng';
+        // Go to mode selection
+        elements.btnToggleView.style.display = 'inline-flex';
+        switchView('view-mode-selection');
+        showToast('Đã tải đề ôn tập từ bộ nhớ trình duyệt!', 'success');
+        return;
+      }
+      throw new Error('Đề ôn tập này không tồn tại hoặc đã bị xóa.');
+    }
+    
+    const data = await response.json();
+    if (!data.questions || data.questions.length === 0) {
+      throw new Error('Đề bài ôn tập trống hoặc định dạng bị lỗi.');
+    }
+    
+    state.questions = data.questions;
+    elements.quizPreviewTitle.innerText = data.title || 'Đề Ôn Tập Từ Vựng';
+    
+    // Go to mode selection
+    elements.btnToggleView.style.display = 'inline-flex';
+    switchView('view-mode-selection');
+    showToast('Đã tải đề ôn tập từ máy chủ!', 'success');
+  } catch (error) {
+    console.error('Error loading quiz:', error);
+    showToast(`Lỗi: ${error.message}`, 'error');
+    setTimeout(() => {
+      switchView('view-teacher');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 3000);
+  }
 }
 
 // ==========================================================================
