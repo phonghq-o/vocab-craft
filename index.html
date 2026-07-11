@@ -178,7 +178,7 @@
                 <i data-lucide="play"></i> Bắt đầu Ôn Tập (Học Sinh)
               </button>
               <button id="btn-share-quiz" class="btn btn-secondary btn-full btn-lg">
-                <i data-lucide="share-2"></i> Lưu Đề & Lấy Link Cho Mẹ
+                <i data-lucide="share-2"></i> Lưu đề & lấy link
               </button>
             </div>
 
@@ -192,6 +192,47 @@
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Update Log Section -->
+      <div class="card mt-xl bg-blur animate-fade-in" style="max-width: 800px; margin-left: auto; margin-right: auto; padding: 2.5rem 2rem;">
+        <div class="card-header" style="margin-bottom: 1.5rem;">
+          <i data-lucide="history" class="card-icon text-secondary"></i>
+          <h2>Nhật Ký Cập Nhật (Update Log)</h2>
+        </div>
+        <div class="update-timeline">
+          <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid var(--color-primary);">
+            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Phiên bản v1.3</h3>
+              <span class="badge" style="font-size: 0.7rem; background: var(--color-primary); color: white;">Mới nhất</span>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin: 0.35rem 0 0 0;">
+              • Thêm tính năng <strong>quay lại câu hỏi trước</strong> (chỉ áp dụng ở Chế độ Luyện Tập) kèm thông báo ghi chú.<br>
+              • Tự động <strong>phát âm từ vựng bằng tiếng Anh</strong> ngay khi chuyển sang câu tiếp theo giúp con học phản xạ tốt hơn.
+            </p>
+          </div>
+          <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid rgba(255,255,255,0.1);">
+            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.2</h3>
+              <span class="badge badge-secondary" style="font-size: 0.7rem; opacity: 0.7;">Trước đó</span>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
+              • Tích hợp màn hình <strong>chọn chế độ học tập</strong>: Luyện Tập (không giới hạn thời gian) và Kiểm Tra (giới hạn 45 giây mỗi câu hỏi) kèm đếm ngược sinh động.
+            </p>
+          </div>
+          <div class="update-item" style="position: relative; padding-left: 2rem; border-left: 2px solid rgba(255,255,255,0.1);">
+            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.1</h3>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
+              • Hỗ trợ cơ chế <strong>Lưu đề ôn tập trực tuyến</strong> và tạo đường dẫn chia sẻ nhanh cho Phụ Huynh trên Zalo/Messenger để ôn tập cùng con.<br>
+              • Việt hóa toàn bộ giao diện, chuyển sang hệ thống 2 ô nhập Tiếng Anh & Tiếng Việt song song và tích hợp AI chấm điểm từ đồng nghĩa thông minh.
+            </p>
           </div>
         </div>
       </div>
@@ -241,9 +282,20 @@
           </div>
 
           <div class="quiz-actions mt-xl">
-            <button id="btn-next-question" class="btn btn-primary btn-lg btn-full">
-              Câu tiếp theo <i data-lucide="arrow-right"></i>
-            </button>
+            <div class="quiz-actions-grid">
+              <button id="btn-prev-question" class="btn btn-secondary btn-full btn-lg" style="display: none;">
+                <i data-lucide="arrow-left"></i> Câu trước đó
+              </button>
+              <button id="btn-next-question" class="btn btn-primary btn-full btn-lg">
+                Câu tiếp theo <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Practice Mode Feature Hint -->
+          <div id="quiz-practice-hint" class="text-center mt-md" style="display: none; font-size: 0.85rem; color: var(--text-muted);">
+            <i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 2px;"></i>
+            Tính năng quay lại câu trước chỉ khả dụng ở <strong>Chế độ Luyện Tập</strong>
           </div>
         </div>
       </div>

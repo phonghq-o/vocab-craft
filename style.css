@@ -1063,13 +1063,16 @@ header {
 }
 
 .quiz-actions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 1rem;
+  width: 100%;
+}
+.quiz-actions-grid button {
+  flex: 1;
 }
 @media (max-width: 600px) {
   .quiz-actions-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 .share-link-box {

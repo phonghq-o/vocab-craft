@@ -59,6 +59,8 @@ const elements = {
   inputStudentEnglish: document.getElementById('input-student-english'),
   inputStudentVietnamese: document.getElementById('input-student-vietnamese'),
   btnNextQuestion: document.getElementById('btn-next-question'),
+  btnPrevQuestion: document.getElementById('btn-prev-question'),
+  quizPracticeHint: document.getElementById('quiz-practice-hint'),
   quizTimer: document.getElementById('quiz-timer'),
   btnModePractice: document.getElementById('btn-mode-practice'),
   btnModeTest: document.getElementById('btn-mode-test'),
@@ -148,6 +150,11 @@ function setupEventListeners() {
       nextQuestion();
     }
   });
+
+  // Previous Question navigation
+  if (elements.btnPrevQuestion) {
+    elements.btnPrevQuestion.addEventListener('click', prevQuestion);
+  }
 
   // Results Actions
   elements.btnRetryQuiz.addEventListener('click', retryQuiz);
@@ -465,9 +472,15 @@ function showQuestion(index) {
   // Populate data
   elements.quizIpaPronunciation.innerText = q.pronunciation;
 
-  // Clear inputs
-  elements.inputStudentEnglish.value = '';
-  elements.inputStudentVietnamese.value = '';
+  // Prefill inputs if student answered this question before
+  const prevAnswer = state.studentAnswers[index];
+  if (prevAnswer) {
+    elements.inputStudentEnglish.value = prevAnswer.studentEnglish || '';
+    elements.inputStudentVietnamese.value = prevAnswer.studentVietnamese || '';
+  } else {
+    elements.inputStudentEnglish.value = '';
+    elements.inputStudentVietnamese.value = '';
+  }
   
   elements.inputStudentEnglish.classList.remove('text-success', 'text-error');
   elements.inputStudentVietnamese.classList.remove('text-success', 'text-error');
@@ -482,8 +495,21 @@ function showQuestion(index) {
   }
   lucide.createIcons();
 
-  // Handle Practice vs Test Timer Setup
-  if (state.timerMode === 'test') {
+  // Practice Mode vs Test Mode specific layout adjustments
+  if (state.timerMode === 'practice') {
+    if (elements.quizTimer) {
+      elements.quizTimer.style.display = 'none';
+    }
+    
+    // Show/hide prev question button based on current index
+    if (elements.btnPrevQuestion) {
+      elements.btnPrevQuestion.style.display = index > 0 ? 'inline-flex' : 'none';
+    }
+    if (elements.quizPracticeHint) {
+      elements.quizPracticeHint.style.display = 'block';
+    }
+  } else {
+    // Test Mode
     if (elements.quizTimer) {
       elements.quizTimer.style.display = 'inline-flex';
       state.timeLeft = 45;
@@ -510,11 +536,21 @@ function showQuestion(index) {
         }
       }, 1000);
     }
-  } else {
-    if (elements.quizTimer) {
-      elements.quizTimer.style.display = 'none';
+    
+    if (elements.btnPrevQuestion) {
+      elements.btnPrevQuestion.style.display = 'none';
+    }
+    if (elements.quizPracticeHint) {
+      elements.quizPracticeHint.style.display = 'none';
     }
   }
+
+  // Automate English word spelling pronunciation on question display
+  setTimeout(() => {
+    if (state.quizMode && state.currentQuestionIndex === index) {
+      speakWord(q.english_word);
+    }
+  }, 200);
 }
 
 function nextQuestion() {
@@ -546,14 +582,14 @@ function nextQuestion() {
     const isVietnameseCorrect = (studentVietnamese.toLowerCase() === correctVietnamese);
     const isCorrect = isEnglishCorrect && isVietnameseCorrect;
 
-    state.studentAnswers.push({
+    state.studentAnswers[state.currentQuestionIndex] = {
       questionId: currentQuestion.id,
       studentEnglish: studentEnglish,
       studentVietnamese: studentVietnamese,
       isCorrect: isCorrect,
       isEnglishCorrect: isEnglishCorrect,
       isVietnameseCorrect: isVietnameseCorrect
-    });
+    };
 
     // Go to next question
     state.currentQuestionIndex++;
@@ -831,6 +867,38 @@ function fallbackGrading() {
 
 function retryQuiz() {
   startQuiz();
+}
+
+function prevQuestion() {
+  if (state.timerMode !== 'practice') return;
+
+  // Save current answers to state before going back
+  const currentQuestion = state.questions[state.currentQuestionIndex];
+  if (currentQuestion) {
+    const studentEnglish = (elements.inputStudentEnglish.value || '').trim();
+    const studentVietnamese = (elements.inputStudentVietnamese.value || '').trim();
+    
+    const correctEnglish = (currentQuestion.english_word || '').toLowerCase().trim();
+    const correctVietnamese = (currentQuestion.vietnamese_word || '').toLowerCase().trim();
+
+    const isEnglishCorrect = (studentEnglish.toLowerCase() === correctEnglish);
+    const isVietnameseCorrect = (studentVietnamese.toLowerCase() === correctVietnamese);
+    const isCorrect = isEnglishCorrect && isVietnameseCorrect;
+
+    state.studentAnswers[state.currentQuestionIndex] = {
+      questionId: currentQuestion.id,
+      studentEnglish: studentEnglish,
+      studentVietnamese: studentVietnamese,
+      isCorrect: isCorrect,
+      isEnglishCorrect: isEnglishCorrect,
+      isVietnameseCorrect: isVietnameseCorrect
+    };
+  }
+
+  if (state.currentQuestionIndex > 0) {
+    state.currentQuestionIndex--;
+    showQuestion(state.currentQuestionIndex);
+  }
 }
 
 // ==========================================================================
