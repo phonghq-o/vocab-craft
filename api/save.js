@@ -22,8 +22,22 @@ export default async function handler(request, response) {
 
   const quizId = 'q_' + Math.random().toString(36).substring(2, 10);
 
-  const kvUrl = process.env.KV_REST_API_URL;
-  const kvToken = process.env.KV_REST_API_TOKEN;
+  let kvUrl = process.env.KV_REST_API_URL;
+  let kvToken = process.env.KV_REST_API_TOKEN;
+
+  // Auto-parse from REDIS_URL or KV_URL if explicit REST variables are missing
+  const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
+  if (!kvUrl && redisUrl) {
+    try {
+      const match = redisUrl.match(/^rediss?:\/\/([^:]+):([^@]+)@([^:]+)/);
+      if (match) {
+        kvUrl = `https://${match[3]}`;
+        kvToken = match[2];
+      }
+    } catch (err) {
+      console.error('Failed to parse REDIS_URL:', err);
+    }
+  }
 
   try {
     if (kvUrl && kvToken) {
