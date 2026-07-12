@@ -218,7 +218,16 @@ function setupEventListeners() {
   });
 
   // Sharing Actions
-  if (elements.btnShareQuiz) elements.btnShareQuiz.addEventListener('click', saveQuiz);
+  if (elements.btnShareQuiz) {
+    elements.btnShareQuiz.addEventListener('click', () => {
+      const input = elements.shareLinkInput;
+      if (!input.value) return;
+      input.select();
+      navigator.clipboard.writeText(input.value)
+        .then(() => showToast('Đã sao chép liên kết vào bộ nhớ!', 'success'))
+        .catch(() => showToast('Lỗi khi sao chép liên kết.', 'error'));
+    });
+  }
   if (elements.btnCopyShareLink) elements.btnCopyShareLink.addEventListener('click', copyShareLink);
 
   // Mode Selection Actions
@@ -265,7 +274,14 @@ function setupEventListeners() {
     elements.btnViewVocabDirectly.addEventListener('click', viewVocabHandbook);
   }
   if (elements.btnShareVocab) {
-    elements.btnShareVocab.addEventListener('click', saveVocabHandbook);
+    elements.btnShareVocab.addEventListener('click', () => {
+      const input = elements.vocabShareInput;
+      if (!input.value) return;
+      input.select();
+      navigator.clipboard.writeText(input.value)
+        .then(() => showToast('Đã sao chép liên kết vào bộ nhớ!', 'success'))
+        .catch(() => showToast('Lỗi khi sao chép liên kết.', 'error'));
+    });
   }
   if (elements.btnCopyVocabLink) {
     elements.btnCopyVocabLink.addEventListener('click', copyVocabLink);
@@ -375,8 +391,49 @@ async function generateExercises() {
     }
 
     state.questions = response.questions;
-    state.currentLocalId = addItemToLibrary('quiz', response.title, response.questions);
+    
+    // Auto-save online immediately!
+    const quizTitle = response.title || 'Đề Ôn Tập Từ Vựng';
+    let shareId = null;
+    const quizDataObj = {
+      title: quizTitle,
+      questions: response.questions
+    };
+
+    // Update loader text to show saving status
+    elements.previewLoader.querySelector('p').innerText = "Đang lưu đề ôn tập lên máy chủ...";
+    elements.previewLoader.querySelector('.loader-subtext').innerText = "Vui lòng đợi trong giây lát, hệ thống đang tạo liên kết chia sẻ.";
+
+    try {
+      const saveRes = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quizDataObj)
+      });
+      if (saveRes.ok) {
+        const resData = await saveRes.json();
+        if (resData.id) {
+          shareId = resData.id;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to auto-save online, using local storage fallback:', err);
+    }
+
+    if (!shareId) {
+      const tempId = 'local_' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem(tempId, JSON.stringify(quizDataObj));
+      shareId = tempId;
+      showToast('Đã lưu đề cục bộ (chạy ngoại tuyến)!', 'info');
+    }
+
+    state.currentLocalId = addItemToLibrary('quiz', quizTitle, response.questions, shareId);
     renderPreviewList(response);
+
+    // Set the share link inputs immediately!
+    const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${shareId}`;
+    elements.shareLinkInput.value = shareUrl;
+    elements.shareLinkContainer.style.display = 'block';
     
     // Switch to preview content
     elements.previewLoader.style.display = 'none';
@@ -1236,15 +1293,53 @@ async function generateVocabHandbook() {
     await Promise.all(imagePromises);
 
     state.vocabHandbook = result;
-    state.currentLocalId = addItemToLibrary('handbook', result.title, result.words);
+
+    // Auto-save online immediately!
+    const vocabTitle = result.title || 'Sổ Tay Từ Vựng';
+    let shareId = null;
+    const payload = {
+      title: vocabTitle,
+      isVocabList: true,
+      questions: result.words // Re-use backend field to avoid database schema updates
+    };
+
+    // Update loader text
+    elements.vocabPreviewLoader.querySelector('p').innerText = "Đang lưu sổ tay lên máy chủ...";
+    elements.vocabPreviewLoader.querySelector('.loader-subtext').innerText = "Vui lòng đợi trong giây lát, hệ thống đang tạo liên kết chia sẻ.";
+
+    try {
+      const saveRes = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (saveRes.ok) {
+        const resData = await saveRes.json();
+        if (resData.id) {
+          shareId = resData.id;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to auto-save handbook online, using local fallback:', err);
+    }
+
+    if (!shareId) {
+      const tempId = 'local_list_' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem(tempId, JSON.stringify(payload));
+      shareId = tempId;
+      showToast('Đã lưu sổ tay cục bộ (chạy ngoại tuyến)!', 'info');
+    }
+
+    state.currentLocalId = addItemToLibrary('handbook', vocabTitle, result.words, shareId);
     renderVocabPreview(result);
+
+    // Set the share link inputs immediately!
+    const shareUrl = `${window.location.origin}${window.location.pathname}?list=${shareId}`;
+    elements.vocabShareInput.value = shareUrl;
+    elements.vocabShareContainer.style.display = 'block';
 
     elements.vocabPreviewLoader.style.display = 'none';
     elements.vocabPreviewContent.style.display = 'block';
-    
-    // Clear old share container
-    elements.vocabShareContainer.style.display = 'none';
-    elements.vocabShareInput.value = '';
 
     showToast('Biên soạn sổ tay từ vựng thành công!', 'success');
   } catch (error) {
@@ -1602,14 +1697,14 @@ function saveLibraryToStorage() {
   }
 }
 
-function addItemToLibrary(type, title, payload) {
+function addItemToLibrary(type, title, payload, shareId = null) {
   const localId = 'local_' + type + '_' + Math.random().toString(36).substring(2, 10);
   const item = {
     id: localId,
     type: type, // 'quiz' or 'handbook'
     title: title || (type === 'quiz' ? 'Đề ôn tập từ vựng' : 'Sổ tay từ vựng'),
     timestamp: Date.now(),
-    shareId: null,
+    shareId: shareId,
     payload: payload
   };
   state.libraryItems.unshift(item);
