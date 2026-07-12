@@ -27,10 +27,19 @@ export default async function handler(request, response) {
   const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
   if (!kvUrl && redisUrl) {
     try {
-      const match = redisUrl.match(/^rediss?:\/\/([^:]+):([^@]+)@([^:]+)/);
+      const match = redisUrl.match(/^rediss?:\/\/(?:([^:]*):)?([^@]+)@([^:]+):(\d+)/);
       if (match) {
-        kvUrl = `https://${match[3]}`;
-        kvToken = match[2];
+        const host = match[3];
+        const port = match[4];
+        const token = match[2];
+        
+        let restHost = host;
+        if (host.endsWith('.upstash.io')) {
+          const prefix = host.slice(0, -11);
+          restHost = `${prefix}-${port}.upstash.io`;
+        }
+        kvUrl = `https://${restHost}`;
+        kvToken = token;
       }
     } catch (err) {
       console.error('Failed to parse REDIS_URL:', err);
