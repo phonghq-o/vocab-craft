@@ -49,17 +49,28 @@ export default async function handler(request, response) {
 
       return response.status(200).json(JSON.parse(rawVal));
     } else {
-      // Free public fallback bucket (KVdb.io) for zero-config universal sharing
-      const bucketId = 'phonghq_vocab_craft_bucket_v1';
-      const kvdbUrl = `https://kvdb.io/${bucketId}/${id}`;
-      
-      const apiResponse = await fetch(kvdbUrl);
-      if (!apiResponse.ok) {
-        return response.status(404).json({ error: 'Quiz not found on database fallback.' });
-      }
+      if (process.env.NODE_ENV === 'production') {
+        return response.status(400).json({ 
+          error: 'Vercel KV database is not connected. Please link a KV database on the Vercel Dashboard.' 
+        });
+      } else {
+        // Local dev fallback: Read from quizzes.json
+        const filepath = path.join(process.cwd(), 'quizzes.json');
+        
+        try {
+          const fileContent = await fs.readFile(filepath, 'utf8');
+          const quizzes = JSON.parse(fileContent);
+          const quizData = quizzes[id];
 
-      const data = await apiResponse.json();
-      return response.status(200).json(data);
+          if (!quizData) {
+            return response.status(404).json({ error: 'Quiz not found.' });
+          }
+
+          return response.status(200).json(quizData);
+        } catch (err) {
+          return response.status(404).json({ error: 'No quizzes saved locally yet.' });
+        }
+      }
     }
   } catch (error) {
     console.error('Error loading quiz:', error);

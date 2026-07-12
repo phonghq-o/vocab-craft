@@ -45,22 +45,31 @@ export default async function handler(request, response) {
 
       return response.status(200).json({ success: true, id: quizId });
     } else {
-      // Free public fallback bucket (KVdb.io) for zero-config universal sharing
-      const bucketId = 'phonghq_vocab_craft_bucket_v1';
-      const kvdbUrl = `https://kvdb.io/${bucketId}/${quizId}`;
-      const value = { title: title || 'Đề Ôn Tập Từ Vựng', questions };
+      // Fallback logic
+      if (process.env.NODE_ENV === 'production') {
+        return response.status(400).json({ 
+          error: 'Vercel KV database is not connected to this project. Please go to your Vercel Dashboard -> Storage and link a KV database, then redeploy your project.' 
+        });
+      } else {
+        // Local fallback: Save to quizzes.json
+        const filepath = path.join(process.cwd(), 'quizzes.json');
+        let quizzes = {};
 
-      const apiResponse = await fetch(kvdbUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value)
-      });
+        try {
+          const fileContent = await fs.readFile(filepath, 'utf8');
+          quizzes = JSON.parse(fileContent);
+        } catch (err) {
+          // File doesn't exist yet
+        }
 
-      if (!apiResponse.ok) {
-        throw new Error('Failed to save to public database fallback.');
+        quizzes[quizId] = {
+          title: title || 'Đề Ôn Tập Từ Vựng',
+          questions
+        };
+
+        await fs.writeFile(filepath, JSON.stringify(quizzes, null, 2), 'utf8');
+        return response.status(200).json({ success: true, id: quizId, local: true });
       }
-
-      return response.status(200).json({ success: true, id: quizId });
     }
   } catch (error) {
     console.error('Error saving quiz:', error);

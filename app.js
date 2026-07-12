@@ -415,9 +415,13 @@ async function generateExercises() {
         if (resData.id) {
           shareId = resData.id;
         }
+      } else {
+        const errData = await saveRes.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${saveRes.status}`);
       }
     } catch (err) {
       console.warn('Failed to auto-save online, using local storage fallback:', err);
+      showToast(`Lưu trực tuyến thất bại: ${err.message}. Đã lưu cục bộ trên trình duyệt.`, 'warning');
     }
 
     if (!shareId) {
@@ -1318,9 +1322,13 @@ async function generateVocabHandbook() {
         if (resData.id) {
           shareId = resData.id;
         }
+      } else {
+        const errData = await saveRes.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${saveRes.status}`);
       }
     } catch (err) {
       console.warn('Failed to auto-save handbook online, using local fallback:', err);
+      showToast(`Lưu trực tuyến thất bại: ${err.message}. Đã lưu cục bộ trên trình duyệt.`, 'warning');
     }
 
     if (!shareId) {
