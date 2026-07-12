@@ -1098,3 +1098,297 @@ header {
     opacity: 0.7;
   }
 }
+
+/* Navigation Tabs in Header */
+.nav-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.25rem;
+  border-radius: 9999px;
+  gap: 0.25rem;
+  margin: 0 auto;
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: var(--transition-smooth);
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #4f46e5 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+  }
+  .nav-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: -3.5rem; /* pull up actions slightly */
+    order: 2;
+  }
+}
+
+/* Vocabulary Handbook Gallery Viewer */
+.vocab-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.vocab-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+}
+
+.vocab-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vocab-card-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocab-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.vocab-card:hover .vocab-card-img {
+  transform: scale(1.05);
+}
+
+.vocab-card-placeholder {
+  font-size: 3rem;
+  font-weight: 800;
+  color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.vocab-card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.vocab-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vocab-card-word {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.vocab-card-kind {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.vocab-card-ipa-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.vocab-card-ipa {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.btn-vocab-speak {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.vocab-card:hover .btn-vocab-speak,
+.btn-vocab-speak:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: transparent;
+}
+
+.vocab-card-example-box {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1rem;
+}
+
+.vocab-card-example-en {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.vocab-card-example-en strong {
+  color: var(--color-secondary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.vocab-card-example-vi {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Library Table Dashboard Styles */
+.library-table {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.library-table th, 
+.library-table td {
+  padding: 1.15rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.library-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.library-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.library-title-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.library-actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-lib-action {
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.8rem !important;
+  border-radius: var(--border-radius-sm) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.badge-lib-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+
+.badge-lib-type.quiz {
+  background: rgba(16, 185, 129, 0.15);
+  color: #a7f3d0;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.badge-lib-type.handbook {
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+@media (max-width: 768px) {
+  .library-table th:nth-child(3),
+  .library-table td:nth-child(3),
+  .library-table th:nth-child(4),
+  .library-table td:nth-child(4) {
+    display: none;
+  }
+}

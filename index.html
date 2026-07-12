@@ -26,6 +26,19 @@
         <i data-lucide="sparkles" class="logo-icon"></i>
         <span>Góc Học <span>Từ Vựng</span></span>
       </div>
+      
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" id="main-nav-tabs">
+        <button class="nav-tab active" data-target="view-teacher">
+          <i data-lucide="check-square"></i> Tạo Bài Tập
+        </button>
+        <button class="nav-tab" data-target="view-vocab-creator">
+          <i data-lucide="book-open"></i> Sổ Tay Từ Vựng
+        </button>
+        <button class="nav-tab" data-target="view-library">
+          <i data-lucide="folder-heart"></i> Thư Viện Của Tôi
+        </button>
+      </nav>
       <div class="header-actions">
         <button id="btn-settings" class="btn btn-secondary btn-icon-only" title="Cấu hình Gemini API">
           <i data-lucide="key-round"></i>
@@ -195,44 +208,164 @@
           </div>
         </div>
       </div>
-
-      <!-- Update Log Section -->
-      <div class="card mt-xl bg-blur animate-fade-in" style="max-width: 800px; margin-left: auto; margin-right: auto; padding: 2.5rem 2rem;">
-        <div class="card-header" style="margin-bottom: 1.5rem;">
-          <i data-lucide="history" class="card-icon text-secondary"></i>
-          <h2>Nhật Ký Cập Nhật (Update Log)</h2>
+            </p>
+          </div>
         </div>
-        <div class="update-timeline">
-          <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid var(--color-primary);">
-            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Phiên bản v1.3</h3>
-              <span class="badge" style="font-size: 0.7rem; background: var(--color-primary); color: white;">Mới nhất</span>
-            </div>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin: 0.35rem 0 0 0;">
-              • Thêm tính năng <strong>quay lại câu hỏi trước</strong> (chỉ áp dụng ở Chế độ Luyện Tập) kèm thông báo ghi chú.<br>
-              • Tự động <strong>phát âm từ vựng bằng tiếng Anh</strong> ngay khi chuyển sang câu tiếp theo giúp con học phản xạ tốt hơn.
-            </p>
+      </div>
+    </section>
+
+    <!-- App View: Vocabulary Handbook Creator -->
+    <section id="view-vocab-creator" class="app-view">
+      <div class="hero-section text-center">
+        <h1>Tạo <span class="gradient-text">Sổ Tay Từ Vựng</span> Cho Con</h1>
+        <p class="hero-subtitle">Nhập chủ đề hoặc từ vựng. Hệ thống AI sẽ tự động tạo phát âm IPA Anh-Mỹ, câu ngữ cảnh và tìm ảnh minh họa thực tế từ Wikipedia.</p>
+      </div>
+
+      <div class="grid grid-2-col">
+        <!-- Creator Controls -->
+        <div class="card card-interactive">
+          <div class="card-header">
+            <i data-lucide="book-open" class="card-icon text-primary"></i>
+            <h2>Cấu hình Sổ Tay</h2>
           </div>
-          <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid rgba(255,255,255,0.1);">
-            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.2</h3>
-              <span class="badge badge-secondary" style="font-size: 0.7rem; opacity: 0.7;">Trước đó</span>
-            </div>
-            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
-              • Tích hợp màn hình <strong>chọn chế độ học tập</strong>: Luyện Tập (không giới hạn thời gian) và Kiểm Tra (giới hạn 45 giây mỗi câu hỏi) kèm đếm ngược sinh động.
-            </p>
+          
+          <div class="form-group">
+            <label for="vocab-prompt-input">Nhập Từ Vựng hoặc Mô Tả Chủ Đề</label>
+            <textarea id="vocab-prompt-input" rows="6" placeholder="Ví dụ: Tạo sổ tay từ vựng chủ đề các con vật sống ở đại dương: cá heo, cá mập, rùa biển, bạch tuộc..."></textarea>
           </div>
-          <div class="update-item" style="position: relative; padding-left: 2rem; border-left: 2px solid rgba(255,255,255,0.1);">
-            <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.1</h3>
+
+          <!-- Presets/Templates -->
+          <div class="presets-section">
+            <label>Chọn Nhanh Chủ Đề Gợi Ý</label>
+            <div class="preset-chips">
+              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng chủ đề các con vật nuôi trong nhà:\nCon mèo, con chó, con thỏ, con chuột hamster">Thú cưng 🐶</button>
+              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng chủ đề các loại trái cây mùa hè:\nTáo, chuối, dưa hấu, sầu riêng, cam, xoài">Trái cây 🥭</button>
+              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng các vật dụng học tập trong lớp học:\nBút chì, thước kẻ, sách vở, tẩy, hộp bút">Học tập ✏️</button>
+              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng các hiện tượng thời tiết tự nhiên:\nMưa, nắng, gió, tuyết, bão, cầu vồng">Thời tiết ☁️</button>
             </div>
-            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
-              • Hỗ trợ cơ chế <strong>Lưu đề ôn tập trực tuyến</strong> và tạo đường dẫn chia sẻ nhanh cho Phụ Huynh trên Zalo/Messenger để ôn tập cùng con.<br>
-              • Việt hóa toàn bộ giao diện, chuyển sang hệ thống 2 ô nhập Tiếng Anh & Tiếng Việt song song và tích hợp AI chấm điểm từ đồng nghĩa thông minh.
-            </p>
+          </div>
+
+          <div class="card-actions mt-lg">
+            <button id="btn-generate-vocab" class="btn btn-primary btn-full btn-lg">
+              <i data-lucide="wand-2"></i> Biên Soạn Sổ Tay
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Preview / Ready Panel -->
+        <div class="card bg-blur">
+          <div class="card-header">
+            <i data-lucide="eye" class="card-icon text-secondary"></i>
+            <h2>Xem Trước Sổ Tay</h2>
+          </div>
+          
+          <div id="vocab-preview-empty" class="empty-state">
+            <i data-lucide="book-open" class="empty-icon"></i>
+            <p>Sổ tay từ vựng soạn bằng AI sẽ hiển thị ở đây.</p>
+            <span class="empty-hint">Vui lòng nhập chủ đề ở bên trái và bấm "Biên Soạn Sổ Tay" để bắt đầu.</span>
+          </div>
+
+          <!-- Loader -->
+          <div id="vocab-preview-loader" class="loader-container" style="display: none;">
+            <div class="spinner"></div>
+            <p>Hệ thống AI đang soạn thảo sổ tay...</p>
+            <span class="loader-subtext">Đang dịch nghĩa, tìm phát âm IPA chuẩn Anh-Mỹ và tìm ảnh minh họa thực tế từ Wikipedia.</span>
+          </div>
+
+          <!-- Preview Content -->
+          <div id="vocab-preview-content" style="display: none;">
+            <div class="preview-meta">
+              <span id="vocab-preview-title" class="badge">Sổ Tay Từ Vựng</span>
+              <span id="vocab-preview-count" class="badge badge-secondary">0 Từ Vựng</span>
+            </div>
+            <div id="vocab-preview-list" class="preview-list">
+              <!-- Dynamically populated list -->
+            </div>
+            
+            <div class="quiz-actions-grid mt-lg">
+              <button id="btn-view-vocab-directly" class="btn btn-success btn-full btn-lg">
+                <i data-lucide="book-open"></i> Xem Sổ Tay (Học Sinh)
+              </button>
+              <button id="btn-share-vocab" class="btn btn-secondary btn-full btn-lg">
+                <i data-lucide="share-2"></i> Lưu đề & lấy link
+              </button>
+            </div>
+
+            <!-- Share Link Container (Initially Hidden) -->
+            <div id="vocab-share-container" class="share-link-box mt-md" style="display: none;">
+              <label class="mb-xs" style="text-align: left; display: block; font-size: 0.85rem; color: var(--text-secondary);">Gửi liên kết sổ tay này cho Phụ Huynh và Học Sinh:</label>
+              <div class="input-with-action">
+                <input type="text" id="vocab-share-input" readonly placeholder="Đang tạo liên kết...">
+                <button id="btn-copy-vocab-link" class="btn btn-icon-only" title="Sao chép liên kết">
+                  <i data-lucide="copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App View: Vocabulary Handbook Viewer (Student Panel) -->
+    <section id="view-vocab-viewer" class="app-view">
+      <div class="quiz-container" style="max-width: 900px; margin: 1.5rem auto;">
+        <div class="results-header text-center" style="margin-bottom: 2.5rem;">
+          <h1 id="vocab-viewer-title" class="gradient-text" style="font-size: 2.5rem; font-weight: 800;">Chủ Đề: Học Từ Vựng</h1>
+          <p class="hero-subtitle" style="font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.5rem;">Ấn vào các tấm thẻ hoặc nút loa để nghe giọng phát âm tiếng Anh bản xứ.</p>
+        </div>
+
+        <div id="vocab-cards-gallery" class="vocab-gallery-grid">
+          <!-- Dynamically populated gallery of card items -->
+        </div>
+
+        <div class="text-center mt-xl" style="margin-bottom: 3rem;">
+          <button id="btn-vocab-exit" class="btn btn-secondary btn-lg">
+            <i data-lucide="arrow-left"></i> Quay Lại Trang Chủ
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- App View: Library / Collection Manager -->
+    <section id="view-library" class="app-view">
+      <div class="hero-section text-center">
+        <h1>Thư Viện <span class="gradient-text">Từ Vựng Của Tôi</span></h1>
+        <p class="hero-subtitle">Tất cả đề bài tập và sổ tay từ vựng đã được tạo tự động lưu trữ tại thiết bị này.</p>
+      </div>
+
+      <div class="card bg-blur max-width-lg" style="margin-left: auto; margin-right: auto; padding: 2.25rem 2rem;">
+        <div class="card-header" style="margin-bottom: 1.5rem; justify-content: space-between; display: flex; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="library" class="card-icon text-primary"></i>
+            <h2>Kho Lưu Trữ Gần Đây</h2>
+          </div>
+          <span id="library-count-badge" class="badge">0 Bộ</span>
+        </div>
+
+        <!-- Empty state -->
+        <div id="library-empty" class="empty-state" style="padding: 4rem 1.5rem;">
+          <i data-lucide="folder-open" class="empty-icon"></i>
+          <p>Chưa có tài liệu học tập nào được lưu trữ.</p>
+          <span class="empty-hint">Vui lòng chuyển sang tab "Tạo Bài Tập" hoặc "Sổ Tay Từ Vựng" để bắt đầu biên soạn.</span>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="library-content" style="display: none;">
+          <div class="library-table-wrapper" style="overflow-x: auto;">
+            <table class="library-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">
+                  <th style="padding: 1rem 0.5rem;">Tài Liệu</th>
+                  <th style="padding: 1rem 0.5rem;">Phân Loại</th>
+                  <th style="padding: 1rem 0.5rem;">Số Lượng</th>
+                  <th style="padding: 1rem 0.5rem;">Ngày Tạo</th>
+                  <th style="padding: 1rem 0.5rem; text-align: right;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="library-items-list">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -357,6 +490,57 @@
       </div>
     </section>
 
+    <!-- Update Log Section -->
+    <div id="sec-update-log" class="card mt-xl bg-blur animate-fade-in" style="max-width: 800px; margin-left: auto; margin-right: auto; padding: 2.5rem 2rem; margin-bottom: 2rem;">
+      <div class="card-header" style="margin-bottom: 1.5rem;">
+        <i data-lucide="history" class="card-icon text-secondary"></i>
+        <h2>Nhật Ký Cập Nhật (Update Log)</h2>
+      </div>
+      <div class="update-timeline">
+        <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid var(--color-primary);">
+          <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary);"></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Phiên bản v1.4</h3>
+            <span class="badge" style="font-size: 0.7rem; background: var(--color-primary); color: white;">Mới nhất</span>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin: 0.35rem 0 0 0;">
+            • Thêm tính năng <strong>Sổ Tay Từ Vựng (Vocabulary Handbook)</strong> học tập trực quan cho học sinh.<br>
+            • Tự động <strong>tải hình ảnh minh họa từ Wikipedia</strong>, tích hợp phát âm IPA và câu ví dụ tiếng Anh kèm nghĩa dịch tiếng Việt.<br>
+            • Hỗ trợ lưu trữ trực tuyến và chia sẻ sổ tay qua liên kết nhanh.
+          </p>
+        </div>
+        <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid rgba(255,255,255,0.1);">
+          <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.3</h3>
+            <span class="badge badge-secondary" style="font-size: 0.7rem; opacity: 0.7;">Trước đó</span>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
+            • Thêm tính năng <strong>quay lại câu hỏi trước</strong> (chỉ áp dụng ở Chế độ Luyện Tập) kèm thông báo ghi chú.<br>
+            • Tự động <strong>phát âm từ vựng bằng tiếng Anh</strong> ngay khi chuyển sang câu tiếp theo giúp con học phản xạ tốt hơn.
+          </p>
+        </div>
+        <div class="update-item" style="position: relative; padding-left: 2rem; margin-bottom: 1.75rem; border-left: 2px solid rgba(255,255,255,0.1);">
+          <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.2</h3>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
+            • Tích hợp màn hình <strong>chọn chế độ học tập</strong>: Luyện Tập (không giới hạn thời gian) và Kiểm Tra (giới hạn 45 giây mỗi câu hỏi) kèm đếm ngược sinh động.
+          </p>
+        </div>
+        <div class="update-item" style="position: relative; padding-left: 2rem; border-left: 2px solid rgba(255,255,255,0.1);">
+          <div class="update-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Phiên bản v1.1</h3>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0.35rem 0 0 0;">
+            • Hỗ trợ cơ chế <strong>Lưu đề ôn tập trực tuyến</strong> và tạo đường dẫn chia sẻ nhanh cho Phụ Huynh trên Zalo/Messenger để ôn tập cùng con.<br>
+            • Việt hóa toàn bộ giao diện, chuyển sang hệ thống 2 ô nhập Tiếng Anh & Tiếng Việt song song và tích hợp AI chấm điểm từ đồng nghĩa thông minh.
+          </p>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Footer -->

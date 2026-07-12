@@ -13,7 +13,10 @@ const state = {
   isAnswerChecked: false,
   timerMode: 'practice', // 'practice' or 'test'
   timerInterval: null,
-  timeLeft: 45
+  timeLeft: 45,
+  vocabHandbook: null, // holds { title, words }
+  libraryItems: [], // holds list of quiz/handbook items
+  currentLocalId: null // tracks local ID of current previewed item
 };
 
 // DOM Elements
@@ -72,7 +75,42 @@ const elements = {
   resultsReviewList: document.getElementById('results-review-list'),
   btnRetryQuiz: document.getElementById('btn-retry-quiz'),
   btnNewQuiz: document.getElementById('btn-new-quiz'),
-  resultsBadgeIcon: document.getElementById('results-badge-icon')
+  resultsBadgeIcon: document.getElementById('results-badge-icon'),
+
+  // Navigation & Tabs
+  mainNavTabs: document.getElementById('main-nav-tabs'),
+  navTabsList: document.querySelectorAll('.nav-tab'),
+  secUpdateLog: document.getElementById('sec-update-log'),
+
+  // Vocabulary Creator
+  viewVocabCreator: document.getElementById('view-vocab-creator'),
+  vocabPromptInput: document.getElementById('vocab-prompt-input'),
+  btnGenerateVocab: document.getElementById('btn-generate-vocab'),
+  vocabPreviewEmpty: document.getElementById('vocab-preview-empty'),
+  vocabPreviewLoader: document.getElementById('vocab-preview-loader'),
+  vocabPreviewContent: document.getElementById('vocab-preview-content'),
+  vocabPreviewTitle: document.getElementById('vocab-preview-title'),
+  vocabPreviewCount: document.getElementById('vocab-preview-count'),
+  vocabPreviewList: document.getElementById('vocab-preview-list'),
+  btnViewVocabDirectly: document.getElementById('btn-view-vocab-directly'),
+  btnShareVocab: document.getElementById('btn-share-vocab'),
+  vocabShareContainer: document.getElementById('vocab-share-container'),
+  vocabShareInput: document.getElementById('vocab-share-input'),
+  btnCopyVocabLink: document.getElementById('btn-copy-vocab-link'),
+  vocabChips: document.querySelectorAll('.vocab-chip'),
+
+  // Vocabulary Viewer (Student Panel)
+  viewVocabViewer: document.getElementById('view-vocab-viewer'),
+  vocabViewerTitle: document.getElementById('vocab-viewer-title'),
+  vocabCardsGallery: document.getElementById('vocab-cards-gallery'),
+  btnVocabExit: document.getElementById('btn-vocab-exit'),
+
+  // Library / Collection
+  viewLibrary: document.getElementById('view-library'),
+  libraryCountBadge: document.getElementById('library-count-badge'),
+  libraryEmpty: document.getElementById('library-empty'),
+  libraryContent: document.getElementById('library-content'),
+  libraryItemsList: document.getElementById('library-items-list')
 };
 
 // ==========================================================================
@@ -87,12 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.inputApiKey.value = state.apiKey;
   }
 
+  // Load library items from local storage
+  loadLibraryFromStorage();
+
   setupEventListeners();
 
-  // URL Parameter Routing (Load shared quiz)
+  // URL Parameter Routing (Load shared quiz or shared handbook)
   const urlParams = new URLSearchParams(window.location.search);
   const quizId = urlParams.get('quiz');
-  if (quizId) {
+  const listId = urlParams.get('list');
+  
+  if (listId) {
+    loadSharedVocabList(listId);
+  } else if (quizId) {
     loadSharedQuiz(quizId);
   }
 });
@@ -179,6 +224,69 @@ function setupEventListeners() {
   // Mode Selection Actions
   if (elements.btnModePractice) elements.btnModePractice.addEventListener('click', () => selectQuizMode('practice'));
   if (elements.btnModeTest) elements.btnModeTest.addEventListener('click', () => selectQuizMode('test'));
+
+  // Main Header Navigation Tabs
+  if (elements.navTabsList) {
+    elements.navTabsList.forEach(tab => {
+      tab.addEventListener('click', () => {
+        elements.navTabsList.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const targetView = tab.getAttribute('data-target');
+        switchView(targetView);
+        
+        // Ensure header actions/back buttons are reset properly
+        elements.btnToggleView.style.display = 'none';
+
+        if (targetView === 'view-library') {
+          renderLibraryUI();
+        }
+      });
+    });
+  }
+
+  // Vocab Handbook Generator
+  if (elements.btnGenerateVocab) {
+    elements.btnGenerateVocab.addEventListener('click', generateVocabHandbook);
+  }
+
+  // Vocab Preset Chips click handlers
+  if (elements.vocabChips) {
+    elements.vocabChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        elements.vocabPromptInput.value = chip.getAttribute('data-prompt').replace(/\\n/g, '\n');
+        elements.vocabPromptInput.focus();
+      });
+    });
+  }
+
+  // Vocab Handbook Viewer actions
+  if (elements.btnViewVocabDirectly) {
+    elements.btnViewVocabDirectly.addEventListener('click', viewVocabHandbook);
+  }
+  if (elements.btnShareVocab) {
+    elements.btnShareVocab.addEventListener('click', saveVocabHandbook);
+  }
+  if (elements.btnCopyVocabLink) {
+    elements.btnCopyVocabLink.addEventListener('click', copyVocabLink);
+  }
+  if (elements.btnVocabExit) {
+    elements.btnVocabExit.addEventListener('click', () => {
+      // Check if loaded from shared list, in which case return to home creator
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('list')) {
+        // Remove parameter and show homepage
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Reset navigation tabs
+        elements.navTabsList.forEach(t => t.classList.remove('active'));
+        const mainTab = Array.from(elements.navTabsList).find(t => t.getAttribute('data-target') === 'view-teacher');
+        if (mainTab) mainTab.classList.add('active');
+        switchView('view-teacher');
+      } else {
+        switchView('view-vocab-creator');
+      }
+    });
+  }
 }
 
 // ==========================================================================
@@ -221,11 +329,22 @@ function switchView(viewId) {
   if (elements.viewGrading) elements.viewGrading.classList.remove('active');
   if (elements.viewLoadingQuiz) elements.viewLoadingQuiz.classList.remove('active');
   if (elements.viewModeSelection) elements.viewModeSelection.classList.remove('active');
+  if (elements.viewVocabCreator) elements.viewVocabCreator.classList.remove('active');
+  if (elements.viewVocabViewer) elements.viewVocabViewer.classList.remove('active');
 
   // Show active view
   const activeView = document.getElementById(viewId);
   if (activeView) {
     activeView.classList.add('active');
+  }
+
+  // Show/Hide Update Log (only visible on creator/library panels)
+  if (elements.secUpdateLog) {
+    if (viewId === 'view-teacher' || viewId === 'view-vocab-creator' || viewId === 'view-library') {
+      elements.secUpdateLog.style.display = 'block';
+    } else {
+      elements.secUpdateLog.style.display = 'none';
+    }
   }
 }
 
@@ -256,6 +375,7 @@ async function generateExercises() {
     }
 
     state.questions = response.questions;
+    state.currentLocalId = addItemToLibrary('quiz', response.title, response.questions);
     renderPreviewList(response);
     
     // Switch to preview content
@@ -932,6 +1052,8 @@ async function saveQuiz() {
     const resData = await response.json();
     if (!resData.id) throw new Error('Mã ID của đề bị trống.');
     
+    updateLibraryItemShareId(state.currentLocalId, resData.id);
+    
     const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${resData.id}`;
     elements.shareLinkInput.value = shareUrl;
     elements.shareLinkContainer.style.display = 'block';
@@ -942,6 +1064,8 @@ async function saveQuiz() {
     
     // Fallback: Store quiz data directly in localStorage
     localStorage.setItem(tempId, JSON.stringify(quizDataObj));
+    
+    updateLibraryItemShareId(state.currentLocalId, tempId);
     
     const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${tempId}`;
     elements.shareLinkInput.value = shareUrl;
@@ -1079,6 +1203,645 @@ function showToast(message, type = 'info') {
     }, 300);
   }, 4000);
 }
+
+// ==========================================================================
+// Vocabulary Handbook Feature Methods
+// ==========================================================================
+async function generateVocabHandbook() {
+  const promptText = elements.vocabPromptInput.value.trim();
+
+  // Validations
+  if (!promptText) {
+    showToast('Vui lòng nhập từ vựng hoặc chủ đề gợi ý trước.', 'error');
+    return;
+  }
+
+  // Toggle Loading State
+  elements.vocabPreviewEmpty.style.display = 'none';
+  elements.vocabPreviewContent.style.display = 'none';
+  elements.vocabPreviewLoader.style.display = 'flex';
+  elements.btnGenerateVocab.disabled = true;
+
+  try {
+    const result = await callGeminiAPIForList(promptText);
+
+    if (!result || !result.words || result.words.length === 0) {
+      throw new Error('Dữ liệu trả về từ Gemini bị trống hoặc không hợp lệ.');
+    }
+
+    // Fetch Wikipedia Images Asynchronously in parallel
+    const imagePromises = result.words.map(async (item) => {
+      item.image = await fetchWikipediaImage(item.word);
+    });
+    await Promise.all(imagePromises);
+
+    state.vocabHandbook = result;
+    state.currentLocalId = addItemToLibrary('handbook', result.title, result.words);
+    renderVocabPreview(result);
+
+    elements.vocabPreviewLoader.style.display = 'none';
+    elements.vocabPreviewContent.style.display = 'block';
+    
+    // Clear old share container
+    elements.vocabShareContainer.style.display = 'none';
+    elements.vocabShareInput.value = '';
+
+    showToast('Biên soạn sổ tay từ vựng thành công!', 'success');
+  } catch (error) {
+    console.error(error);
+    elements.vocabPreviewLoader.style.display = 'none';
+    elements.vocabPreviewEmpty.style.display = 'flex';
+    
+    if (error.message.includes('API Key') || error.message.includes('key is not configured')) {
+      elements.secApiKey.classList.add('active');
+      elements.secApiKey.scrollIntoView({ behavior: 'smooth' });
+      showToast('Khóa API bị thiếu. Vui lòng cấu hình ở nút cài đặt.', 'error');
+    } else {
+      showToast(`Lỗi: ${error.message || 'Không thể tạo sổ tay.'}`, 'error');
+    }
+  } finally {
+    elements.btnGenerateVocab.disabled = false;
+  }
+}
+
+async function fetchWikipediaImage(word) {
+  try {
+    const cleanWord = encodeURIComponent(word.toLowerCase().trim());
+    const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${cleanWord}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.thumbnail?.source || null;
+  } catch (err) {
+    console.warn(`Failed to fetch Wikipedia image for "${word}":`, err);
+    return null;
+  }
+}
+
+function renderVocabPreview(data) {
+  elements.vocabPreviewTitle.innerText = data.title || 'Sổ Tay Từ Vựng';
+  elements.vocabPreviewCount.innerText = `${data.words.length} Từ Vựng`;
+  elements.vocabPreviewList.innerHTML = '';
+
+  data.words.forEach(w => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.innerHTML = `
+      <div class="preview-item-word">
+        <span class="preview-english">
+          ${w.word} 
+          <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9rem;">(${w.kind})</span>
+          <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85rem; margin-left: 0.25rem;">${w.ipa}</span>
+        </span>
+      </div>
+      <p class="preview-sentence">${w.example_en}<br><span style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">${w.example_vi}</span></p>
+    `;
+    elements.vocabPreviewList.appendChild(item);
+  });
+}
+
+function viewVocabHandbook() {
+  if (!state.vocabHandbook) return;
+
+  switchView('view-vocab-viewer');
+  elements.vocabViewerTitle.innerText = state.vocabHandbook.title || 'Sổ Tay Từ Vựng';
+  elements.vocabCardsGallery.innerHTML = '';
+
+  state.vocabHandbook.words.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'vocab-card';
+    
+    // Construct highlight word in English sentence
+    let highlightedEn = w.example_en;
+    try {
+      const reg = new RegExp(`\\b(${w.word})\\b`, 'gi');
+      highlightedEn = w.example_en.replace(reg, '<strong>$1</strong>');
+    } catch (e) {}
+
+    // Draw card content
+    card.innerHTML = `
+      <div class="vocab-card-img-wrapper">
+        ${w.image 
+          ? `<img src="${w.image}" alt="${w.word}" class="vocab-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="vocab-card-placeholder" style="display:none;">${w.word.charAt(0)}</div>`
+          : `<div class="vocab-card-placeholder">${w.word.charAt(0)}</div>`
+        }
+      </div>
+      <div class="vocab-card-body">
+        <div class="vocab-card-header-row">
+          <span class="vocab-card-word">${w.word}</span>
+          <span class="vocab-card-kind">${w.kind}</span>
+        </div>
+        <div class="vocab-card-ipa-row">
+          <span class="vocab-card-ipa">${w.ipa}</span>
+          <button class="btn-vocab-speak" title="Nghe phát âm">
+            <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+        <div class="vocab-card-example-box">
+          <div class="vocab-card-example-en">${highlightedEn}</div>
+          <div class="vocab-card-example-vi">${w.example_vi}</div>
+        </div>
+      </div>
+    `;
+
+    // Listen to card click/speak
+    card.querySelector('.btn-vocab-speak').addEventListener('click', (e) => {
+      e.stopPropagation();
+      speakWord(w.word);
+    });
+    card.addEventListener('click', () => {
+      speakWord(w.word);
+    });
+
+    elements.vocabCardsGallery.appendChild(card);
+  });
+
+  lucide.createIcons();
+}
+
+async function saveVocabHandbook() {
+  if (!state.vocabHandbook) return;
+
+  elements.btnShareVocab.disabled = true;
+  const originalContent = elements.btnShareVocab.innerHTML;
+  elements.btnShareVocab.innerHTML = `<span class="spinner" style="width:16px; height:16px; margin:0; display:inline-block; border-width:2px; vertical-align:middle;"></span> Đang lưu...`;
+
+  const payload = {
+    title: state.vocabHandbook.title,
+    isVocabList: true,
+    questions: state.vocabHandbook.words // Re-use backend field to avoid modifying api/save.js code
+  };
+
+  const tempId = 'local_list_' + Math.random().toString(36).substring(2, 10);
+
+  try {
+    const response = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned status code ${response.status}`);
+    }
+
+    const resData = await response.json();
+    if (!resData.id) throw new Error('ID đề trả về bị trống.');
+    
+    updateLibraryItemShareId(state.currentLocalId, resData.id);
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}?list=${resData.id}`;
+    elements.vocabShareInput.value = shareUrl;
+    elements.vocabShareContainer.style.display = 'block';
+
+    showToast('Lưu sổ tay thành công! Hãy chia sẻ liên kết này cho học sinh.', 'success');
+  } catch (error) {
+    console.warn('Backend API not available, saving list to LocalStorage:', error);
+
+    // Fallback: save to LocalStorage
+    localStorage.setItem(tempId, JSON.stringify(payload));
+
+    updateLibraryItemShareId(state.currentLocalId, tempId);
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}?list=${tempId}`;
+    elements.vocabShareInput.value = shareUrl;
+    elements.vocabShareContainer.style.display = 'block';
+
+    showToast('Lưu sổ tay thành công (lưu cục bộ trên trình duyệt máy bạn)!', 'success');
+  } finally {
+    elements.btnShareVocab.disabled = false;
+    elements.btnShareVocab.innerHTML = originalContent;
+    lucide.createIcons();
+  }
+}
+
+function copyVocabLink() {
+  const input = elements.vocabShareInput;
+  if (!input.value) return;
+
+  input.select();
+  input.setSelectionRange(0, 99999);
+
+  navigator.clipboard.writeText(input.value)
+    .then(() => {
+      showToast('Đã sao chép liên kết vào bộ nhớ!', 'success');
+    })
+    .catch(err => {
+      console.error('Failed to copy: ', err);
+      showToast('Lỗi khi sao chép liên kết.', 'error');
+    });
+}
+
+async function loadSharedVocabList(listId) {
+  switchView('view-loading-quiz');
+  elements.btnToggleView.style.display = 'none';
+
+  // LocalStorage check first
+  if (listId.startsWith('local_')) {
+    const localData = localStorage.getItem(listId);
+    if (localData) {
+      try {
+        const data = JSON.parse(localData);
+        state.vocabHandbook = {
+          title: data.title || 'Sổ Tay Từ Vựng',
+          words: data.questions
+        };
+        viewVocabHandbook();
+        showToast('Đã tải sổ tay từ bộ nhớ trình duyệt!', 'success');
+        return;
+      } catch (err) {
+        console.error('Failed to parse local handbook:', err);
+      }
+    }
+  }
+
+  try {
+    const response = await fetch(`/api/load?id=${listId}`);
+    if (!response.ok) {
+      // Secondary fallback check for localStorage
+      const localData = localStorage.getItem(listId);
+      if (localData) {
+        const data = JSON.parse(localData);
+        state.vocabHandbook = {
+          title: data.title || 'Sổ Tay Từ Vựng',
+          words: data.questions
+        };
+        viewVocabHandbook();
+        showToast('Đã tải sổ tay từ bộ nhớ trình duyệt!', 'success');
+        return;
+      }
+      throw new Error('Sổ tay từ vựng này không tồn tại hoặc đã bị xóa.');
+    }
+
+    const data = await response.json();
+    state.vocabHandbook = {
+      title: data.title || 'Sổ Tay Từ Vựng',
+      words: data.questions
+    };
+    viewVocabHandbook();
+    showToast('Tải sổ tay thành công!', 'success');
+  } catch (error) {
+    console.error('Error loading list:', error);
+    showToast(`Lỗi: ${error.message}`, 'error');
+    setTimeout(() => {
+      switchView('view-teacher');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 3000);
+  }
+}
+
+async function callGeminiAPIForList(promptText) {
+  const responseSchema = {
+    type: "OBJECT",
+    properties: {
+      title: { type: "STRING", description: "Short, catchy title in Vietnamese describing this vocabulary list" },
+      words: {
+        type: "ARRAY",
+        description: "List of vocabulary items matching the prompt",
+        items: {
+          type: "OBJECT",
+          properties: {
+            word: { type: "STRING", description: "The English word in lowercase (e.g. tortoise, apple)" },
+            kind: { type: "STRING", description: "Part of speech in Vietnamese (e.g. danh từ, động từ, tính từ, trạng từ)" },
+            ipa: { type: "STRING", description: "IPA English pronunciation guide (e.g. /ˈtɔː.təs/)" },
+            example_en: { type: "STRING", description: "An interesting, educational example sentence using the word in English" },
+            example_vi: { type: "STRING", description: "The natural translation of the example sentence in Vietnamese" }
+          },
+          required: ["word", "kind", "ipa", "example_en", "example_vi"]
+        }
+      }
+    },
+    required: ["title", "words"]
+  };
+
+  const systemInstruction = `You are a helpful assistant for a bilingual English-Vietnamese vocabulary handbook.
+Your task is to take the teacher's input vocabulary words or prompt and generate a structured list of vocabulary cards.
+
+For each word:
+1. Find the standard English spelling (all lowercase).
+2. Identify the part of speech in Vietnamese (kind: e.g. "danh từ", "động từ", "tính từ", "trạng từ").
+3. Formulate the standard English IPA pronunciation guide.
+4. Write a simple, educational English example sentence illustrating the usage of the word.
+5. Translate this example sentence naturally into Vietnamese.
+
+Ensure that the title of the list generated is strictly in Vietnamese.
+Ensure that all words matching the teacher's list are correctly processed and included in the output.`;
+
+  const requestBody = {
+    contents: [{
+      parts: [{ text: `Teacher prompt: ${promptText}` }]
+    }],
+    systemInstruction: {
+      parts: [{ text: systemInstruction }]
+    },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: responseSchema,
+      temperature: 0.2
+    }
+  };
+
+  if (state.apiKey) {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error?.message || response.statusText || 'API request failed';
+      throw new Error(errMsg);
+    }
+
+    const result = await response.json();
+    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) {
+      throw new Error('Empty response from model.');
+    }
+    return JSON.parse(rawText);
+  } else {
+    const response = await fetch('/api/generate-list', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: promptText })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error || errData.message || response.statusText || 'Không thể kết nối máy chủ tạo sổ tay.';
+      throw new Error(errMsg);
+    }
+
+    return await response.json();
+  }
+}
+// ==========================================================================
+// Local Library Manager Feature Methods
+// ==========================================================================
+function loadLibraryFromStorage() {
+  try {
+    const raw = localStorage.getItem('vocab_craft_library');
+    state.libraryItems = raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error('Failed to load library items:', err);
+    state.libraryItems = [];
+  }
+}
+
+function saveLibraryToStorage() {
+  try {
+    localStorage.setItem('vocab_craft_library', JSON.stringify(state.libraryItems));
+  } catch (err) {
+    console.error('Failed to save library items:', err);
+  }
+}
+
+function addItemToLibrary(type, title, payload) {
+  const localId = 'local_' + type + '_' + Math.random().toString(36).substring(2, 10);
+  const item = {
+    id: localId,
+    type: type, // 'quiz' or 'handbook'
+    title: title || (type === 'quiz' ? 'Đề ôn tập từ vựng' : 'Sổ tay từ vựng'),
+    timestamp: Date.now(),
+    shareId: null,
+    payload: payload
+  };
+  state.libraryItems.unshift(item);
+  saveLibraryToStorage();
+  return localId;
+}
+
+function updateLibraryItemShareId(localId, serverId) {
+  if (!localId) return;
+  const item = state.libraryItems.find(i => i.id === localId);
+  if (item) {
+    item.shareId = serverId;
+    saveLibraryToStorage();
+  }
+}
+
+function renderLibraryUI() {
+  const count = state.libraryItems.length;
+  elements.libraryCountBadge.innerText = `${count} Bộ`;
+
+  if (count === 0) {
+    elements.libraryEmpty.style.display = 'flex';
+    elements.libraryContent.style.display = 'none';
+    return;
+  }
+
+  elements.libraryEmpty.style.display = 'none';
+  elements.libraryContent.style.display = 'block';
+  elements.libraryItemsList.innerHTML = '';
+
+  state.libraryItems.forEach(item => {
+    const row = document.createElement('tr');
+    
+    // Formatting date
+    const dateStr = new Date(item.timestamp).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
+    const countLabel = item.type === 'quiz' 
+      ? `${item.payload.length} Câu hỏi` 
+      : `${item.payload.length} Từ vựng`;
+
+    const badgeHtml = item.type === 'quiz'
+      ? '<span class="badge-lib-type quiz">Bài Tập</span>'
+      : '<span class="badge-lib-type handbook">Sổ Tay</span>';
+
+    row.innerHTML = `
+      <td class="library-title-cell" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</td>
+      <td>${badgeHtml}</td>
+      <td>${countLabel}</td>
+      <td>${dateStr}</td>
+      <td class="library-actions-cell" style="text-align: right;">
+        <button class="btn btn-success btn-lib-action btn-lib-open" data-id="${item.id}">
+          <i data-lucide="play" style="width: 12px; height: 12px;"></i> Mở
+        </button>
+        <button class="btn btn-secondary btn-lib-action btn-lib-share" data-id="${item.id}">
+          <i data-lucide="share-2" style="width: 12px; height: 12px;"></i> ${item.shareId ? 'Lấy Link' : 'Chia Sẻ'}
+        </button>
+        <button class="btn btn-secondary btn-lib-action btn-lib-delete" style="border-color: rgba(239, 68, 68, 0.2); color: #f87171;" data-id="${item.id}">
+          <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Xóa
+        </button>
+      </td>
+    `;
+
+    // Wire up events
+    row.querySelector('.btn-lib-open').addEventListener('click', () => handleLibraryOpen(item.id));
+    row.querySelector('.btn-lib-share').addEventListener('click', (e) => handleLibraryShare(item.id, e.currentTarget));
+    row.querySelector('.btn-lib-delete').addEventListener('click', () => handleLibraryDelete(item.id));
+
+    elements.libraryItemsList.appendChild(row);
+  });
+
+  lucide.createIcons();
+}
+
+function handleLibraryOpen(itemId) {
+  const item = state.libraryItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  state.currentLocalId = item.id;
+
+  if (item.type === 'quiz') {
+    state.questions = item.payload;
+    
+    // Fill the creator preview card
+    elements.quizPreviewTitle.innerText = item.title;
+    elements.quizPreviewCount.innerText = `${item.payload.length} Câu hỏi`;
+    renderPreviewList({ title: item.title, questions: item.payload });
+
+    // Show preview content
+    elements.previewEmptyState.style.display = 'none';
+    elements.previewContent.style.display = 'block';
+
+    // Show/hide share details based on online status
+    if (item.shareId) {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?quiz=${item.shareId}`;
+      elements.shareLinkInput.value = shareUrl;
+      elements.shareLinkContainer.style.display = 'block';
+    } else {
+      elements.shareLinkContainer.style.display = 'none';
+      elements.shareLinkInput.value = '';
+    }
+
+    // Switch active view and tab
+    elements.navTabsList.forEach(t => t.classList.remove('active'));
+    const mainTab = Array.from(elements.navTabsList).find(t => t.getAttribute('data-target') === 'view-teacher');
+    if (mainTab) mainTab.classList.add('active');
+    
+    switchView('view-teacher');
+    showToast(`Đã mở đề: ${item.title}`, 'success');
+  } else {
+    state.vocabHandbook = {
+      title: item.title,
+      words: item.payload
+    };
+
+    // Fill creator handbook preview card
+    elements.vocabPreviewTitle.innerText = item.title;
+    elements.vocabPreviewCount.innerText = `${item.payload.length} Từ Vựng`;
+    renderVocabPreview(state.vocabHandbook);
+
+    // Show preview content
+    elements.vocabPreviewEmpty.style.display = 'none';
+    elements.vocabPreviewContent.style.display = 'block';
+
+    // Show/hide share details based on online status
+    if (item.shareId) {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?list=${item.shareId}`;
+      elements.vocabShareInput.value = shareUrl;
+      elements.vocabShareContainer.style.display = 'block';
+    } else {
+      elements.vocabShareContainer.style.display = 'none';
+      elements.vocabShareInput.value = '';
+    }
+
+    // Switch active view and tab
+    elements.navTabsList.forEach(t => t.classList.remove('active'));
+    const vocabTab = Array.from(elements.navTabsList).find(t => t.getAttribute('data-target') === 'view-vocab-creator');
+    if (vocabTab) vocabTab.classList.add('active');
+
+    switchView('view-vocab-creator');
+    showToast(`Đã mở sổ tay: ${item.title}`, 'success');
+  }
+}
+
+async function handleLibraryShare(itemId, buttonEl) {
+  const item = state.libraryItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  // If already shared, copy the link directly
+  if (item.shareId) {
+    const shareUrl = item.type === 'quiz'
+      ? `${window.location.origin}${window.location.pathname}?quiz=${item.shareId}`
+      : `${window.location.origin}${window.location.pathname}?list=${item.shareId}`;
+    
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => showToast('Đã sao chép liên kết chia sẻ vào bộ nhớ!', 'success'))
+      .catch(() => showToast('Không thể tự động sao chép. Vui lòng mở đề để lấy liên kết.', 'error'));
+    return;
+  }
+
+  // Otherwise, save it online now
+  buttonEl.disabled = true;
+  const originalHtml = buttonEl.innerHTML;
+  buttonEl.innerHTML = `<span class="spinner" style="width:10px; height:10px; border-width:1.5px; margin:0; display:inline-block; vertical-align:middle;"></span> Lưu...`;
+
+  const payload = item.type === 'quiz'
+    ? { title: item.title, questions: item.payload }
+    : { title: item.title, isVocabList: true, questions: item.payload };
+
+  const tempId = (item.type === 'quiz' ? 'local_' : 'local_list_') + Math.random().toString(36).substring(2, 10);
+
+  try {
+    const response = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error();
+
+    const resData = await response.json();
+    if (!resData.id) throw new Error();
+
+    // Update item online share ID
+    item.shareId = resData.id;
+    saveLibraryToStorage();
+    renderLibraryUI();
+
+    const shareUrl = item.type === 'quiz'
+      ? `${window.location.origin}${window.location.pathname}?quiz=${resData.id}`
+      : `${window.location.origin}${window.location.pathname}?list=${resData.id}`;
+
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => showToast('Đã lưu trực tuyến và sao chép liên kết vào bộ nhớ!', 'success'))
+      .catch(() => showToast('Đã lưu trực tuyến thành công!', 'success'));
+
+  } catch (err) {
+    // Local fallback save
+    localStorage.setItem(tempId, JSON.stringify(payload));
+    item.shareId = tempId;
+    saveLibraryToStorage();
+    renderLibraryUI();
+
+    const shareUrl = item.type === 'quiz'
+      ? `${window.location.origin}${window.location.pathname}?quiz=${tempId}`
+      : `${window.location.origin}${window.location.pathname}?list=${tempId}`;
+
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => showToast('Đã lưu cục bộ và sao chép liên kết!', 'success'))
+      .catch(() => showToast('Đã lưu cục bộ thành công!', 'success'));
+  } finally {
+    buttonEl.disabled = false;
+    buttonEl.innerHTML = originalHtml;
+    lucide.createIcons();
+  }
+}
+
+function handleLibraryDelete(itemId) {
+  const item = state.libraryItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  if (confirm(`Bạn có chắc chắn muốn xóa "${item.title}" khỏi thư viện?`)) {
+    state.libraryItems = state.libraryItems.filter(i => i.id !== itemId);
+    saveLibraryToStorage();
+    renderLibraryUI();
+    showToast('Đã xóa tài liệu khỏi thư viện.', 'success');
+  }
+}
+
 
 function escapeHtml(text) {
   const div = document.createElement('div');
