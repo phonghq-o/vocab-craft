@@ -46,9 +46,10 @@ export default async function handler(request, response) {
       return response.status(200).json({ success: true, id: quizId });
     } else {
       // Fallback logic
+      const kvKeys = Object.keys(process.env).filter(k => k.startsWith('KV_'));
       if (process.env.NODE_ENV === 'production') {
         return response.status(400).json({ 
-          error: 'Vercel KV database is not connected to this project. Please go to your Vercel Dashboard -> Storage and link a KV database, then redeploy your project.' 
+          error: `Vercel KV database is not connected to this project. Found KV environment keys: [${kvKeys.join(', ')}]. Please go to your Vercel Dashboard -> Storage and link a KV database, then redeploy your project.` 
         });
       } else {
         // Local fallback: Save to quizzes.json
