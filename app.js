@@ -150,7 +150,10 @@ function setupEventListeners() {
   elements.btnSaveKey.addEventListener('click', saveApiKey);
   elements.btnToggleKeyVisibility.addEventListener('click', toggleKeyVisibility);
   elements.btnSettings.addEventListener('click', () => {
-    elements.secApiKey.classList.toggle('active');
+    const isActive = elements.secApiKey.classList.toggle('active');
+    if (isActive) {
+      elements.secApiKey.scrollIntoView({ behavior: 'smooth' });
+    }
   });
   elements.btnCloseSettings.addEventListener('click', () => {
     elements.secApiKey.classList.remove('active');
