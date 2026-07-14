@@ -36,7 +36,11 @@ export default async function handler(request, response) {
         let restHost = host;
         if (host.endsWith('.upstash.io')) {
           const prefix = host.slice(0, -11);
-          restHost = `${prefix}-${port}.upstash.io`;
+          if (port === '6379') {
+            restHost = host;
+          } else {
+            restHost = `${prefix}-${port}.upstash.io`;
+          }
         }
         kvUrl = `https://${restHost}`;
         kvToken = token;
