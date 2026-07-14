@@ -16,6 +16,7 @@ const state = {
   timeLeft: 45,
   vocabHandbook: null, // holds { title, words }
   libraryItems: [], // holds list of quiz/handbook items
+  libraryExpanded: false, // tracks if the library list is expanded
   currentLocalId: null // tracks local ID of current previewed item
 };
 
@@ -111,6 +112,8 @@ const elements = {
   libraryEmpty: document.getElementById('library-empty'),
   libraryContent: document.getElementById('library-content'),
   libraryItemsList: document.getElementById('library-items-list'),
+  libraryActions: document.getElementById('library-actions'),
+  btnLibraryExpand: document.getElementById('btn-library-expand'),
 
   // Developer Test Panel
   btnDevTest: document.getElementById('btn-dev-test'),
@@ -323,6 +326,14 @@ function setupEventListeners() {
     elements.btnVocabTemplate.addEventListener('click', () => {
       elements.vocabPromptInput.value = "Tạo sổ tay từ vựng theo chủ đề hoặc các từ sau:\n[Điền các từ hoặc chủ đề vào đây, ví dụ: cá heo, cá mập, con rùa]";
       elements.vocabPromptInput.focus();
+    });
+  }
+
+  // Library Expand Button
+  if (elements.btnLibraryExpand) {
+    elements.btnLibraryExpand.addEventListener('click', () => {
+      state.libraryExpanded = !state.libraryExpanded;
+      renderLibraryUI();
     });
   }
 
@@ -1806,7 +1817,9 @@ function renderLibraryUI() {
   elements.libraryContent.style.display = 'block';
   elements.libraryItemsList.innerHTML = '';
 
-  state.libraryItems.forEach(item => {
+  const itemsToDisplay = state.libraryExpanded ? state.libraryItems : state.libraryItems.slice(0, 5);
+
+  itemsToDisplay.forEach(item => {
     const row = document.createElement('tr');
     
     // Formatting date
@@ -1850,7 +1863,17 @@ function renderLibraryUI() {
     elements.libraryItemsList.appendChild(row);
   });
 
-  lucide.createIcons();
+  if (count > 5) {
+    elements.libraryActions.style.display = 'block';
+    if (state.libraryExpanded) {
+      elements.btnLibraryExpand.innerHTML = '<i data-lucide="chevron-up" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Thu gọn';
+    } else {
+      elements.btnLibraryExpand.innerHTML = '<i data-lucide="chevron-down" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Xem thêm';
+    }
+    lucide.createIcons();
+  } else {
+    elements.libraryActions.style.display = 'none';
+  }
 }
 
 function handleLibraryOpen(itemId) {
