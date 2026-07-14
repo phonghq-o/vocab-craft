@@ -1913,10 +1913,11 @@ function renderLibraryUI() {
     } else {
       elements.btnLibraryExpand.innerHTML = '<i data-lucide="chevron-down" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Xem thêm';
     }
-    lucide.createIcons();
   } else {
     elements.libraryActions.style.display = 'none';
   }
+  
+  lucide.createIcons();
 }
 
 function handleLibraryOpen(itemId) {
