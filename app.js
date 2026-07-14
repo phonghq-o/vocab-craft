@@ -110,7 +110,23 @@ const elements = {
   libraryCountBadge: document.getElementById('library-count-badge'),
   libraryEmpty: document.getElementById('library-empty'),
   libraryContent: document.getElementById('library-content'),
-  libraryItemsList: document.getElementById('library-items-list')
+  libraryItemsList: document.getElementById('library-items-list'),
+
+  // Developer Test Panel
+  btnDevTest: document.getElementById('btn-dev-test'),
+  secDevTest: document.getElementById('sec-dev-test'),
+  btnCloseDevTest: document.getElementById('btn-close-dev-test'),
+  tabTestSave: document.getElementById('tab-test-save'),
+  tabTestLoad: document.getElementById('tab-test-load'),
+  testSaveContent: document.getElementById('test-save-content'),
+  testLoadContent: document.getElementById('test-load-content'),
+  testQuizTitle: document.getElementById('test-quiz-title'),
+  testQuizWords: document.getElementById('test-quiz-words'),
+  btnRunTestSave: document.getElementById('btn-run-test-save'),
+  testLoadId: document.getElementById('test-load-id'),
+  btnRunTestLoad: document.getElementById('btn-run-test-load'),
+  testResultBox: document.getElementById('test-result-box'),
+  testResultOutput: document.getElementById('test-result-output')
 };
 
 // ==========================================================================
@@ -158,6 +174,47 @@ function setupEventListeners() {
   elements.btnCloseSettings.addEventListener('click', () => {
     elements.secApiKey.classList.remove('active');
   });
+
+  // Developer Test Panel Events
+  if (elements.btnDevTest) {
+    elements.btnDevTest.addEventListener('click', () => {
+      const isActive = elements.secDevTest.classList.toggle('active');
+      if (isActive) {
+        elements.secDevTest.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+  if (elements.btnCloseDevTest) {
+    elements.btnCloseDevTest.addEventListener('click', () => {
+      elements.secDevTest.classList.remove('active');
+    });
+  }
+  if (elements.tabTestSave) {
+    elements.tabTestSave.addEventListener('click', () => {
+      elements.tabTestSave.style.borderColor = 'var(--color-primary)';
+      elements.tabTestSave.style.opacity = '1';
+      elements.tabTestLoad.style.borderColor = 'transparent';
+      elements.tabTestLoad.style.opacity = '0.6';
+      elements.testSaveContent.style.display = 'block';
+      elements.testLoadContent.style.display = 'none';
+    });
+  }
+  if (elements.tabTestLoad) {
+    elements.tabTestLoad.addEventListener('click', () => {
+      elements.tabTestLoad.style.borderColor = 'var(--color-primary)';
+      elements.tabTestLoad.style.opacity = '1';
+      elements.tabTestSave.style.borderColor = 'transparent';
+      elements.tabTestSave.style.opacity = '0.6';
+      elements.testLoadContent.style.display = 'block';
+      elements.testSaveContent.style.display = 'none';
+    });
+  }
+  if (elements.btnRunTestSave) {
+    elements.btnRunTestSave.addEventListener('click', runDevSaveTest);
+  }
+  if (elements.btnRunTestLoad) {
+    elements.btnRunTestLoad.addEventListener('click', runDevLoadTest);
+  }
 
   // Presets / Chips
   elements.presetChips.forEach(chip => {
@@ -1945,6 +2002,109 @@ function handleLibraryDelete(itemId) {
     saveLibraryToStorage();
     renderLibraryUI();
     showToast('Đã xóa tài liệu khỏi thư viện.', 'success');
+  }
+}
+
+
+async function runDevSaveTest() {
+  elements.testResultBox.style.display = 'block';
+  elements.testResultOutput.innerText = "Đang chuẩn bị dữ liệu...";
+  elements.testResultOutput.style.color = '#a855f7';
+
+  const title = elements.testQuizTitle.value.trim() || "Đề Kiểm Trắc Nghiệm Mẫu";
+  const wordsRaw = elements.testQuizWords.value.trim();
+  if (!wordsRaw) {
+    elements.testResultOutput.innerText = "LỖI: Vui lòng nhập từ vựng mock.";
+    elements.testResultOutput.style.color = 'var(--color-error)';
+    return;
+  }
+
+  const words = wordsRaw.split(',').map(w => w.trim()).filter(Boolean);
+  
+  const questions = words.map(w => ({
+    english_word: w.toLowerCase(),
+    kind_of_word: "danh từ",
+    ipa_pronunciation: "/mock_ipa/",
+    example_sentence: `This is a mock example sentence using ${w}.`,
+    example_vietnamese: `Đây là một câu ví dụ mẫu sử dụng từ ${w}.`,
+    vietnamese_meaning: `nghĩa của từ ${w}`
+  }));
+
+  const payload = { title, questions };
+  elements.testResultOutput.innerText = "Đang gửi yêu cầu đến `/api/save`...\nPayload:\n" + JSON.stringify(payload, null, 2);
+
+  try {
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const status = res.status;
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    let data;
+    if (isJson) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+
+    elements.testResultOutput.innerText = `HTTP STATUS: ${status}\n\nRESPONSE:\n` + JSON.stringify(data, null, 2);
+    if (res.ok) {
+      elements.testResultOutput.style.color = 'var(--color-success)';
+      const mockId = data.id || '';
+      if (mockId) {
+        showToast('Gửi test save thành công!', 'success');
+        elements.testLoadId.value = mockId;
+      }
+    } else {
+      elements.testResultOutput.style.color = 'var(--color-error)';
+      showToast('Gửi test save thất bại!', 'error');
+    }
+  } catch (err) {
+    elements.testResultOutput.innerText = `FETCH EXCEPTION: ${err.message}\nStack:\n${err.stack}`;
+    elements.testResultOutput.style.color = 'var(--color-error)';
+    showToast('Lỗi kết nối máy chủ!', 'error');
+  }
+}
+
+async function runDevLoadTest() {
+  elements.testResultBox.style.display = 'block';
+  elements.testResultOutput.innerText = "Đang gửi yêu cầu tải dữ liệu...";
+  elements.testResultOutput.style.color = '#a855f7';
+
+  const loadId = elements.testLoadId.value.trim();
+  if (!loadId) {
+    elements.testResultOutput.innerText = "LỖI: Vui lòng nhập ID cần tải.";
+    elements.testResultOutput.style.color = 'var(--color-error)';
+    return;
+  }
+
+  elements.testResultOutput.innerText = `Đang gửi yêu cầu đến \`/api/load?id=${loadId}\`...`;
+
+  try {
+    const res = await fetch(`/api/load?id=${loadId}`);
+    const status = res.status;
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    let data;
+    if (isJson) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+
+    elements.testResultOutput.innerText = `HTTP STATUS: ${status}\n\nRESPONSE:\n` + JSON.stringify(data, null, 2);
+    if (res.ok) {
+      elements.testResultOutput.style.color = 'var(--color-success)';
+      showToast('Tải dữ liệu test thành công!', 'success');
+    } else {
+      elements.testResultOutput.style.color = 'var(--color-error)';
+      showToast('Tải dữ liệu test thất bại!', 'error');
+    }
+  } catch (err) {
+    elements.testResultOutput.innerText = `FETCH EXCEPTION: ${err.message}\nStack:\n${err.stack}`;
+    elements.testResultOutput.style.color = 'var(--color-error)';
+    showToast('Lỗi kết nối máy chủ!', 'error');
   }
 }
 
