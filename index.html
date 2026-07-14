@@ -14,16 +14,12 @@
   <link rel="stylesheet" href="./style.css?v=2">
 </head>
 <body>
-  <!-- Ambient Background Gradients -->
-  <div class="bg-gradient bg-gradient-1"></div>
-  <div class="bg-gradient bg-gradient-2"></div>
-  <div class="bg-gradient bg-gradient-3"></div>
+  <!-- Ambient Background Gradients (Removed) -->
 
   <!-- Header -->
   <header>
     <div class="header-container">
       <div class="logo">
-        <i data-lucide="sparkles" class="logo-icon"></i>
         <span>Góc Học <span>Từ Vựng</span></span>
       </div>
       
@@ -78,10 +74,10 @@
     </section>
 
     <!-- Developer Test Panel -->
-    <section id="sec-dev-test" class="settings-panel card slide-up" style="max-width: 600px; margin: 0 auto 2rem auto; border-color: rgba(147, 51, 234, 0.4); box-shadow: 0 10px 40px rgba(147, 51, 234, 0.15);">
+    <section id="sec-dev-test" class="settings-panel card slide-up" style="max-width: 600px; margin: 0 auto 2rem auto;">
       <div class="panel-header">
         <div class="header-title">
-          <i data-lucide="database" class="title-icon" style="color: #a855f7;"></i>
+          <i data-lucide="database" class="title-icon text-primary"></i>
           <h3>Bảng Kiểm Thử Cơ Sở Dữ Liệu (Dev Diagnostic)</h3>
         </div>
         <button id="btn-close-dev-test" class="btn-close">&times;</button>
@@ -104,7 +100,7 @@
           <textarea id="test-quiz-words" rows="3" placeholder="Nhập các từ...">apple, banana, orange, grape, peach</textarea>
           <p class="help-text" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Hệ thống sẽ tự động sinh dữ liệu đề bài tập mẫu và đẩy thẳng lên database.</p>
         </div>
-        <button id="btn-run-test-save" class="btn btn-primary btn-full" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">
+        <button id="btn-run-test-save" class="btn btn-primary btn-full" style="border: none;">
           <i data-lucide="cloud-lightning"></i> Gửi dữ liệu mẫu lên Database
         </button>
       </div>
@@ -115,15 +111,15 @@
           <label for="test-load-id">Mã ID cần tải (Quiz ID / List ID)</label>
           <input type="text" id="test-load-id" placeholder="Nhập ID (Ví dụ: q_xxxx)">
         </div>
-        <button id="btn-run-test-load" class="btn btn-primary btn-full" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">
+        <button id="btn-run-test-load" class="btn btn-primary btn-full" style="border: none;">
           <i data-lucide="download"></i> Tải dữ liệu từ Database
         </button>
       </div>
 
       <!-- Diagnostic Results Output -->
-      <div id="test-result-box" class="mt-md p-sm" style="background: rgba(18, 14, 38, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--border-radius-sm); display: none;">
+      <div id="test-result-box" class="mt-md p-sm" style="background: var(--bg-dark); border: 1px solid var(--bg-card-border); border-radius: var(--border-radius-sm); display: none; padding: 1rem;">
         <label class="mb-xs" style="font-size: 0.85rem; color: var(--text-secondary); display: block; font-weight: 600;">Kết quả chẩn đoán (Diagnostic Output):</label>
-        <pre id="test-result-output" style="font-family: monospace; font-size: 0.8rem; overflow-x: auto; color: #a855f7; margin: 0; white-space: pre-wrap; max-height: 220px; padding: 0.5rem; background: rgba(0,0,0,0.25); border-radius: 4px;"></pre>
+        <pre id="test-result-output" style="font-family: monospace; font-size: 0.8rem; overflow-x: auto; color: var(--color-primary); margin: 0; white-space: pre-wrap; max-height: 220px; padding: 0.5rem; background: rgba(0,0,0,0.25); border-radius: 4px;"></pre>
       </div>
     </section>
 
@@ -185,15 +181,11 @@
             <textarea id="prompt-input" rows="6" placeholder="Ví dụ: Tạo bài tập điền từ cho các từ sau: Con rùa, con mèo, con chó, con cá heo, con sư tử..."></textarea>
           </div>
 
-          <!-- Presets/Templates -->
+          <!-- Auto Prompt Template -->
           <div class="presets-section">
-            <label>Chọn Nhanh Chủ Đề Gợi Ý</label>
-            <div class="preset-chips">
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nCon rùa, con chim bồ câu, con bướm, con voi">Động vật 🦁</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nTáo, chuối, dưa hấu, sầu riêng, cam">Trái cây 🍎</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nNhà bếp, phòng ngủ, phòng khách, nhà vệ sinh">Nhà cửa 🏠</button>
-              <button class="chip" data-prompt="Create a fill in the blank type exercises using these words:\nBác sĩ, giáo viên, kỹ sư, phi hành gia">Nghề nghiệp 💼</button>
-            </div>
+            <button id="btn-quiz-template" class="btn btn-secondary btn-full">
+              <i data-lucide="file-text"></i> Điền sẵn mẫu câu lệnh (Bạn chỉ cần nhập từ vựng)
+            </button>
           </div>
 
           <div class="card-actions mt-lg">
@@ -282,15 +274,11 @@
             <textarea id="vocab-prompt-input" rows="6" placeholder="Ví dụ: Tạo sổ tay từ vựng chủ đề các con vật sống ở đại dương: cá heo, cá mập, rùa biển, bạch tuộc..."></textarea>
           </div>
 
-          <!-- Presets/Templates -->
+          <!-- Auto Prompt Template -->
           <div class="presets-section">
-            <label>Chọn Nhanh Chủ Đề Gợi Ý</label>
-            <div class="preset-chips">
-              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng chủ đề các con vật nuôi trong nhà:\nCon mèo, con chó, con thỏ, con chuột hamster">Thú cưng 🐶</button>
-              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng chủ đề các loại trái cây mùa hè:\nTáo, chuối, dưa hấu, sầu riêng, cam, xoài">Trái cây 🥭</button>
-              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng các vật dụng học tập trong lớp học:\nBút chì, thước kẻ, sách vở, tẩy, hộp bút">Học tập ✏️</button>
-              <button class="chip vocab-chip" data-prompt="Tạo sổ tay từ vựng các hiện tượng thời tiết tự nhiên:\nMưa, nắng, gió, tuyết, bão, cầu vồng">Thời tiết ☁️</button>
-            </div>
+            <button id="btn-vocab-template" class="btn btn-secondary btn-full">
+              <i data-lucide="file-text"></i> Điền sẵn mẫu câu lệnh (Bạn chỉ cần nhập từ vựng)
+            </button>
           </div>
 
           <div class="card-actions mt-lg">
@@ -540,7 +528,7 @@
 
   <!-- Footer -->
   <footer>
-    <p>&copy; 2026 Góc Học Từ Vựng. Đồng hành cùng Ba Mẹ giúp con học tốt tiếng Anh mỗi ngày. | <span style="opacity: 0.8; font-weight: 600; color: var(--color-primary);">Phiên bản 2.0</span></p>
+    <p>&copy; 2026 Góc Học Từ Vựng. Đồng hành cùng Ba Mẹ giúp con học tốt tiếng Anh mỗi ngày. | <span style="opacity: 0.8; font-weight: 600; color: var(--color-primary);">Phiên bản 2.1</span></p>
     <button id="btn-settings" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.5rem 1rem; border-radius: var(--border-radius-sm); font-size: 0.85rem;" title="Cấu hình Gemini API">
       <i data-lucide="key-round" style="width: 14px; height: 14px;"></i> Cấu hình API Key
     </button>

@@ -52,7 +52,7 @@ const elements = {
   shareLinkContainer: document.getElementById('share-link-container'),
   shareLinkInput: document.getElementById('share-link-input'),
   btnCopyShareLink: document.getElementById('btn-copy-share-link'),
-  presetChips: document.querySelectorAll('.chip'),
+  btnQuizTemplate: document.getElementById('btn-quiz-template'),
 
   // Quiz Taker
   quizQuestionNumber: document.getElementById('quiz-question-number'),
@@ -97,7 +97,7 @@ const elements = {
   vocabShareContainer: document.getElementById('vocab-share-container'),
   vocabShareInput: document.getElementById('vocab-share-input'),
   btnCopyVocabLink: document.getElementById('btn-copy-vocab-link'),
-  vocabChips: document.querySelectorAll('.vocab-chip'),
+  btnVocabTemplate: document.getElementById('btn-vocab-template'),
 
   // Vocabulary Viewer (Student Panel)
   viewVocabViewer: document.getElementById('view-vocab-viewer'),
@@ -216,14 +216,13 @@ function setupEventListeners() {
     elements.btnRunTestLoad.addEventListener('click', runDevLoadTest);
   }
 
-  // Presets / Chips
-  elements.presetChips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      elements.promptInput.value = chip.getAttribute('data-prompt').replace(/\\n/g, '\n');
-      // Highlight selection slightly if desired, or just focus textarea
+  // Templates
+  if (elements.btnQuizTemplate) {
+    elements.btnQuizTemplate.addEventListener('click', () => {
+      elements.promptInput.value = "Create a fill in the blank type exercises using these words:\n[Enter your vocabulary words here, separated by commas]";
       elements.promptInput.focus();
     });
-  });
+  }
 
   // Generator Action
   elements.btnGenerate.addEventListener('click', generateExercises);
@@ -319,13 +318,11 @@ function setupEventListeners() {
     elements.btnGenerateVocab.addEventListener('click', generateVocabHandbook);
   }
 
-  // Vocab Preset Chips click handlers
-  if (elements.vocabChips) {
-    elements.vocabChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        elements.vocabPromptInput.value = chip.getAttribute('data-prompt').replace(/\\n/g, '\n');
-        elements.vocabPromptInput.focus();
-      });
+  // Vocab Template click handler
+  if (elements.btnVocabTemplate) {
+    elements.btnVocabTemplate.addEventListener('click', () => {
+      elements.vocabPromptInput.value = "Tạo sổ tay từ vựng theo chủ đề hoặc các từ sau:\n[Điền các từ hoặc chủ đề vào đây, ví dụ: cá heo, cá mập, con rùa]";
+      elements.vocabPromptInput.focus();
     });
   }
 
