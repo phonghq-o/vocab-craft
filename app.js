@@ -17,7 +17,9 @@ const state = {
   vocabHandbook: null, // holds { title, words }
   libraryItems: [], // holds list of quiz/handbook items
   libraryExpanded: false, // tracks if the library list is expanded
-  currentLocalId: null // tracks local ID of current previewed item
+  currentLocalId: null, // tracks local ID of current previewed item
+  currentSharedQuizId: null, // tracks the quiz ID for stats tracking
+  quizStartTime: 0 // tracks when the quiz started
 };
 
 // DOM Elements
@@ -129,7 +131,14 @@ const elements = {
   testLoadId: document.getElementById('test-load-id'),
   btnRunTestLoad: document.getElementById('btn-run-test-load'),
   testResultBox: document.getElementById('test-result-box'),
-  testResultOutput: document.getElementById('test-result-output')
+  testResultOutput: document.getElementById('test-result-output'),
+  
+  // Quiz Stats Panel
+  secQuizStats: document.getElementById('sec-quiz-stats'),
+  btnCloseStats: document.getElementById('btn-close-stats'),
+  quizStatsList: document.getElementById('quiz-stats-list'),
+  quizStatsEmpty: document.getElementById('quiz-stats-empty'),
+  quizStatsLoader: document.getElementById('quiz-stats-loader')
 };
 
 // ==========================================================================
@@ -192,6 +201,13 @@ function setupEventListeners() {
       elements.secDevTest.classList.remove('active');
     });
   }
+  
+  if (elements.btnCloseStats) {
+    elements.btnCloseStats.addEventListener('click', () => {
+      elements.secQuizStats.classList.remove('active');
+    });
+  }
+
   if (elements.tabTestSave) {
     elements.tabTestSave.addEventListener('click', () => {
       elements.tabTestSave.style.borderColor = 'var(--color-primary)';
@@ -699,6 +715,7 @@ function launchQuiz() {
   state.studentAnswers = [];
   state.score = 0;
   state.quizMode = true;
+  state.quizStartTime = Date.now();
 
   switchView('view-quiz');
   showQuestion(0);
@@ -868,6 +885,22 @@ function showResults() {
   const trueCount = state.score;
   const falseCount = state.questions.length - state.score;
   const percentage = Math.round((trueCount / state.questions.length) * 100);
+  const timeSpentMs = Date.now() - state.quizStartTime;
+  const timeSpentSeconds = Math.floor(timeSpentMs / 1000);
+
+  // Send stats if it's a shared quiz
+  if (state.currentSharedQuizId) {
+    fetch('/api/save-stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quizId: state.currentSharedQuizId,
+        score: trueCount,
+        totalQuestions: state.questions.length,
+        timeSpent: timeSpentSeconds
+      })
+    }).catch(err => console.error("Could not save stats:", err));
+  }
 
   elements.resultsScoreTrue.innerText = trueCount;
   elements.resultsScoreFalse.innerText = falseCount;
@@ -1226,6 +1259,7 @@ function copyShareLink() {
 }
 
 async function loadSharedQuiz(quizId) {
+  state.currentSharedQuizId = quizId;
   switchView('view-loading-quiz');
   elements.btnToggleView.style.display = 'none';
   
@@ -1843,14 +1877,19 @@ function renderLibraryUI() {
       <td>${countLabel}</td>
       <td>${dateStr}</td>
       <td class="library-actions-cell" style="text-align: right;">
-        <button class="btn btn-success btn-lib-action btn-lib-open" data-id="${item.id}">
-          <i data-lucide="play" style="width: 12px; height: 12px;"></i> Mở
+        <button class="btn btn-success btn-lib-action btn-lib-open" data-id="${item.id}" title="Mở">
+          <i data-lucide="play" style="width: 12px; height: 12px;"></i>
         </button>
-        <button class="btn btn-secondary btn-lib-action btn-lib-share" data-id="${item.id}">
-          <i data-lucide="share-2" style="width: 12px; height: 12px;"></i> ${item.shareId ? 'Lấy Link' : 'Chia Sẻ'}
+        <button class="btn btn-secondary btn-lib-action btn-lib-share" data-id="${item.id}" title="Chia sẻ">
+          <i data-lucide="share-2" style="width: 12px; height: 12px;"></i>
         </button>
-        <button class="btn btn-secondary btn-lib-action btn-lib-delete" style="border-color: rgba(239, 68, 68, 0.2); color: #f87171;" data-id="${item.id}">
-          <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Xóa
+        ${item.type === 'quiz' && item.shareId ? `
+        <button class="btn btn-primary btn-lib-action btn-lib-stats" data-id="${item.shareId}" title="Thống Kê">
+          <i data-lucide="bar-chart-2" style="width: 12px; height: 12px;"></i> Thống Kê
+        </button>
+        ` : ''}
+        <button class="btn btn-secondary btn-lib-action btn-lib-delete" style="border-color: rgba(239, 68, 68, 0.2); color: #f87171;" data-id="${item.id}" title="Xóa">
+          <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
         </button>
       </td>
     `;
@@ -1859,6 +1898,10 @@ function renderLibraryUI() {
     row.querySelector('.btn-lib-open').addEventListener('click', () => handleLibraryOpen(item.id));
     row.querySelector('.btn-lib-share').addEventListener('click', (e) => handleLibraryShare(item.id, e.currentTarget));
     row.querySelector('.btn-lib-delete').addEventListener('click', () => handleLibraryDelete(item.id));
+    
+    if (item.type === 'quiz' && item.shareId) {
+      row.querySelector('.btn-lib-stats').addEventListener('click', () => handleLibraryStats(item.shareId));
+    }
 
     elements.libraryItemsList.appendChild(row);
   });
@@ -2027,9 +2070,57 @@ function handleLibraryDelete(itemId) {
     state.libraryItems = state.libraryItems.filter(i => i.id !== itemId);
     saveLibraryToStorage();
     renderLibraryUI();
-    showToast('Đã xóa tài liệu khỏi thư viện.', 'success');
+    showToast('Đã xóa khỏi Thư Viện.', 'success');
   }
 }
+
+async function handleLibraryStats(shareId) {
+  if (!elements.secQuizStats) return;
+  
+  elements.secQuizStats.classList.add('active');
+  elements.secQuizStats.scrollIntoView({ behavior: 'smooth' });
+  
+  elements.quizStatsList.innerHTML = '';
+  elements.quizStatsEmpty.style.display = 'none';
+  elements.quizStatsLoader.style.display = 'block';
+
+  try {
+    const response = await fetch(`/api/get-stats?id=${shareId}`);
+    const data = await response.json();
+    
+    elements.quizStatsLoader.style.display = 'none';
+
+    if (data.stats && data.stats.length > 0) {
+      data.stats.forEach((stat, index) => {
+        const row = document.createElement('tr');
+        
+        const dateStr = new Date(stat.date).toLocaleString('vi-VN');
+        const scoreStr = `${stat.score} / ${stat.totalQuestions}`;
+        
+        // Format time spent (seconds to mm:ss)
+        const mins = Math.floor(stat.timeSpent / 60).toString().padStart(2, '0');
+        const secs = (stat.timeSpent % 60).toString().padStart(2, '0');
+        const timeStr = `${mins}:${secs}`;
+        
+        row.innerHTML = `
+          <td>Lần thử ${index + 1}</td>
+          <td style="font-weight:bold; color:var(--color-primary);">${scoreStr}</td>
+          <td>${timeStr}</td>
+          <td>${dateStr}</td>
+        `;
+        elements.quizStatsList.appendChild(row);
+      });
+    } else {
+      elements.quizStatsEmpty.style.display = 'block';
+    }
+  } catch (error) {
+    console.error("Lỗi khi tải thống kê:", error);
+    elements.quizStatsLoader.style.display = 'none';
+    elements.quizStatsEmpty.style.display = 'block';
+    elements.quizStatsEmpty.innerText = 'Có lỗi xảy ra khi tải dữ liệu thống kê.';
+  }
+}
+
 
 
 async function runDevSaveTest() {

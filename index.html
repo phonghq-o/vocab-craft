@@ -123,6 +123,40 @@
       </div>
     </section>
 
+    <!-- Quiz Stats Panel -->
+    <section id="sec-quiz-stats" class="settings-panel card slide-up" style="max-width: 700px; margin: 0 auto 2rem auto;">
+      <div class="panel-header">
+        <div class="header-title">
+          <i data-lucide="bar-chart-2" class="title-icon text-primary"></i>
+          <h3>Thống Kê Bài Tập</h3>
+        </div>
+        <button id="btn-close-stats" class="btn-close">&times;</button>
+      </div>
+      <p class="panel-desc">Xem lịch sử làm bài của các lần thử cho bài tập này.</p>
+      
+      <div class="library-table-wrapper" style="overflow-x: auto; margin-top: 1rem;">
+        <table class="library-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">
+              <th style="padding: 1rem 0.5rem;">Lần Thử</th>
+              <th style="padding: 1rem 0.5rem;">Điểm Số</th>
+              <th style="padding: 1rem 0.5rem;">Thời Gian</th>
+              <th style="padding: 1rem 0.5rem;">Ngày Làm</th>
+            </tr>
+          </thead>
+          <tbody id="quiz-stats-list">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+      <div id="quiz-stats-empty" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+        Chưa có lượt làm bài nào.
+      </div>
+      <div id="quiz-stats-loader" style="text-align: center; padding: 2rem; display: none;">
+        <div class="spinner" style="width: 24px; height: 24px; margin: 0 auto;"></div>
+      </div>
+    </section>
+
 
     <!-- App View: Loading Quiz -->
     <section id="view-loading-quiz" class="app-view">
