@@ -101,11 +101,13 @@ export default async function handler(request, response) {
     }
   } catch (error) {
     console.error('Error saving quiz:', error);
+    const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
     return response.status(500).json({ 
       error: error.message || 'Internal Server Error',
       diagnostic: {
-        kvUrl: kvUrl ? `${kvUrl.substring(0, 30)}...` : 'undefined',
+        kvUrl: kvUrl || 'undefined',
         hasToken: !!kvToken,
+        redisUrlObscured: redisUrl ? redisUrl.replace(/:[^@]+@/, ':***@') : 'undefined',
         nodeVersion: process.version
       }
     });
