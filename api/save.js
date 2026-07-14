@@ -97,6 +97,13 @@ export default async function handler(request, response) {
     }
   } catch (error) {
     console.error('Error saving quiz:', error);
-    return response.status(500).json({ error: error.message || 'Internal Server Error' });
+    return response.status(500).json({ 
+      error: error.message || 'Internal Server Error',
+      diagnostic: {
+        kvUrl: kvUrl ? `${kvUrl.substring(0, 30)}...` : 'undefined',
+        hasToken: !!kvToken,
+        nodeVersion: process.version
+      }
+    });
   }
 }
