@@ -1,3 +1,4 @@
+import { createClient } from 'redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -21,62 +22,30 @@ export default async function handler(request, response) {
   }
 
   const quizId = 'q_' + Math.random().toString(36).substring(2, 10);
-
-  let kvUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  let kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  // Auto-parse from REDIS_URL or KV_URL if explicit REST variables are missing
   const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
-  if (!kvUrl && redisUrl) {
-    try {
-      const match = redisUrl.match(/^rediss?:\/\/(?:([^:]*):)?([^@]+)@([^:]+):(\d+)/);
-      if (match) {
-        const host = match[3];
-        const port = match[4];
-        const token = match[2];
-        
-        let restHost = host;
-        if (host.endsWith('.upstash.io')) {
-          const prefix = host.slice(0, -11);
-          if (port === '6379') {
-            restHost = host;
-          } else {
-            restHost = `${prefix}-${port}.upstash.io`;
-          }
-        }
-        kvUrl = `https://${restHost}`;
-        kvToken = token;
-      }
-    } catch (err) {
-      console.error('Failed to parse REDIS_URL:', err);
-    }
-  }
 
   try {
-    if (kvUrl && kvToken) {
-      // Production: Save to Vercel KV via REST API
-      const value = { title: title || 'Đề Ôn Tập Từ Vựng', questions };
-      const apiResponse = await fetch(kvUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${kvToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(['SET', quizId, JSON.stringify(value)])
+    if (redisUrl) {
+      // Connect using TCP redis client (universal support for redis.io, Upstash, Vercel KV)
+      const client = createClient({
+        url: redisUrl,
+        socket: {
+          tls: redisUrl.startsWith('rediss://'),
+          rejectUnauthorized: false // Avoid SSL handshake errors with some cloud databases
+        }
       });
-
-      if (!apiResponse.ok) {
-        const err = await apiResponse.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to save to database.');
-      }
+      
+      await client.connect();
+      const value = { title: title || 'Đề Ôn Tập Từ Vựng', questions };
+      await client.set(quizId, JSON.stringify(value));
+      await client.disconnect();
 
       return response.status(200).json({ success: true, id: quizId });
     } else {
       // Fallback logic
-      const kvKeys = Object.keys(process.env).filter(k => k.startsWith('KV_'));
       if (process.env.NODE_ENV === 'production') {
         return response.status(400).json({ 
-          error: `Vercel KV database is not connected to this project. Found KV environment keys: [${kvKeys.join(', ')}]. Please go to your Vercel Dashboard -> Storage and link a KV database, then redeploy your project.` 
+          error: 'Vercel Redis connection string is missing (REDIS_URL / KV_URL). Please check Vercel environment variables.' 
         });
       } else {
         // Local fallback: Save to quizzes.json
@@ -101,12 +70,9 @@ export default async function handler(request, response) {
     }
   } catch (error) {
     console.error('Error saving quiz:', error);
-    const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
     return response.status(500).json({ 
       error: error.message || 'Internal Server Error',
       diagnostic: {
-        kvUrl: kvUrl || 'undefined',
-        hasToken: !!kvToken,
         redisUrlObscured: redisUrl ? redisUrl.replace(/:[^@]+@/, ':***@') : 'undefined',
         nodeVersion: process.version
       }
