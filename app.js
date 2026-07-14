@@ -1455,6 +1455,7 @@ function renderVocabPreview(data) {
           <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9rem;">(${w.kind})</span>
           <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85rem; margin-left: 0.25rem;">${w.ipa}</span>
         </span>
+        <span class="preview-vietnamese" style="color: var(--color-primary); font-weight: 600; font-size: 0.95rem; margin-left: 0.5rem;">: ${w.meaning_vi || ''}</span>
       </div>
       <p class="preview-sentence">${w.example_en}<br><span style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">${w.example_vi}</span></p>
     `;
@@ -1493,6 +1494,9 @@ function viewVocabHandbook() {
         <div class="vocab-card-header-row">
           <span class="vocab-card-word">${w.word}</span>
           <span class="vocab-card-kind">${w.kind}</span>
+        </div>
+        <div class="vocab-card-meaning" style="font-size: 1.05rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem; text-align: left;">
+          ${w.meaning_vi || ''}
         </div>
         <div class="vocab-card-ipa-row">
           <span class="vocab-card-ipa">${w.ipa}</span>
@@ -1665,12 +1669,13 @@ async function callGeminiAPIForList(promptText) {
           type: "OBJECT",
           properties: {
             word: { type: "STRING", description: "The English word in lowercase (e.g. tortoise, apple)" },
+            meaning_vi: { type: "STRING", description: "The direct Vietnamese translation/meaning of the word (e.g. con rùa, quả táo)" },
             kind: { type: "STRING", description: "Part of speech in Vietnamese (e.g. danh từ, động từ, tính từ, trạng từ)" },
             ipa: { type: "STRING", description: "IPA English pronunciation guide (e.g. /ˈtɔː.təs/)" },
             example_en: { type: "STRING", description: "An interesting, educational example sentence using the word in English" },
             example_vi: { type: "STRING", description: "The natural translation of the example sentence in Vietnamese" }
           },
-          required: ["word", "kind", "ipa", "example_en", "example_vi"]
+          required: ["word", "meaning_vi", "kind", "ipa", "example_en", "example_vi"]
         }
       }
     },
@@ -1682,10 +1687,11 @@ Your task is to take the teacher's input vocabulary words or prompt and generate
 
 For each word:
 1. Find the standard English spelling (all lowercase).
-2. Identify the part of speech in Vietnamese (kind: e.g. "danh từ", "động từ", "tính từ", "trạng từ").
-3. Formulate the standard English IPA pronunciation guide.
-4. Write a simple, educational English example sentence illustrating the usage of the word.
-5. Translate this example sentence naturally into Vietnamese.
+2. Translate the word directly into Vietnamese (meaning_vi).
+3. Identify the part of speech in Vietnamese (kind: e.g. "danh từ", "động từ", "tính từ", "trạng từ").
+4. Formulate the standard English IPA pronunciation guide.
+5. Write a simple, educational English example sentence illustrating the usage of the word.
+6. Translate this example sentence naturally into Vietnamese.
 
 Ensure that the title of the list generated is strictly in Vietnamese.
 Ensure that all words matching the teacher's list are correctly processed and included in the output.`;
